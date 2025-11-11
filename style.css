@@ -1,0 +1,54 @@
+/* style.css v2.1 */
+:root{
+  --bg1:#060009; --bg2:#160023; --accent:#d77bff; --accent-strong:#9b5cff;
+  --panel: rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family: Inter, "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(155,92,255,0.06), transparent),
+              linear-gradient(135deg, var(--bg1), var(--bg2));
+  color:#fff; overflow:hidden;
+}
+#bg-animated{position:fixed; inset:0; z-index:0; pointer-events:none; background: linear-gradient(120deg, rgba(155,92,255,0.06), rgba(0,255,200,0.02), rgba(155,92,255,0.02)); animation: bgShift 12s linear infinite alternate;}
+@keyframes bgShift{ from{filter: hue-rotate(0deg) blur(6px)} to{filter: hue-rotate(45deg) blur(10px)}}
+.orb{position:absolute;border-radius:50%;background:radial-gradient(circle,#2a003e,#130021);mix-blend-mode:screen;filter:blur(12px)}
+
+#app{position:relative; z-index:10; max-width:1200px; margin:28px auto; padding:10px}
+.topbar{display:flex;justify-content:space-between;align-items:center}
+.topbar h1{font-size:28px;color:var(--accent);text-shadow:0 6px 18px rgba(155,92,255,0.12)}
+.controls button{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:none; padding:8px 10px; border-radius:8px; color:#fff; cursor:pointer}
+.main{display:flex; gap:18px; margin-top:16px}
+.left{flex:1}
+.right{width:380px; display:flex; flex-direction:column; gap:12px}
+.panel{background:var(--panel); padding:14px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5)}
+.center{display:flex;flex-direction:column;align-items:center;padding:28px}
+#playArea{display:flex;justify-content:flex-start;padding:24px}
+#timWrap{position:relative;width:340px;height:340px;display:flex;align-items:center;justify-content:center}
+#timImg{width:220px;height:220px;border-radius:50%;cursor:pointer;box-shadow:0 30px 80px rgba(155,92,255,0.08), inset 0 6px 20px rgba(0,0,0,0.4); transition:transform .08s}
+#orbitContainer{position:absolute; inset:0; pointer-events:none}
+.orbit-item{position:absolute;width:56px;height:56px;border-radius:50%;pointer-events:auto; transform-origin:center; animation:spin linear infinite}
+.orbit-item img{width:100%;height:100%;border-radius:50%}
+@keyframes spin{ from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.info-row{display:flex;gap:18px;justify-content:space-between;padding:6px 10px; font-weight:600; color:var(--accent-strong)}
+
+/* shop */
+.shop-grid{display:flex;flex-direction:column;gap:10px;margin-top:10px; max-height:360px; overflow:auto; padding-right:6px}
+.shop-item{display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px}
+.shop-item .meta{display:flex;gap:10px;align-items:center}
+.shop-item img{width:48px;height:48px;border-radius:50%}
+.buy-btn{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;color:#000;cursor:pointer}
+
+/* responsive */
+@media(max-width:980px){
+  .main{flex-direction:column}
+  .right{width:100%}
+  #timWrap{width:300px;height:300px}
+  #timImg{width:180px;height:180px}
+}
+button{transition:transform .12s ease}
+button:active{transform:translateY(2px)}
+#bgParticles{position:fixed;left:0;top:0;pointer-events:none;z-index:5}
+.wide{width:100%;padding:10px;margin-bottom:8px}
+.inner{padding:12px}
