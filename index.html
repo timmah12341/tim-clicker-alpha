@@ -1,19 +1,49 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4163953497019376"
-     crossorigin="anonymous"></script>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tim Clicker :3</title>
-<link rel="icon" href="favicon.png" type="image/png">
-<link rel="stylesheet" href="style.css" />
-<script type="module" src="script.js" defer></script>
+  <meta charset="utf-8" />
+
+  <!-- MOBILE & EMBED SAFE VIEWPORT -->
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+  />
+
+  <!-- EMBED / WEBVIEW COMPATIBILITY -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- PREVENT EMBED BLOCKING -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <title>Tim Clicker :3</title>
+
+  <!-- ICONS -->
+  <link rel="icon" href="cookie.png" type="image/png" />
+  <link rel="apple-touch-icon" href="cookie.png" />
+
+  <!-- STYLES -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- SCRIPT (MODULE SAFE FOR WEBVIEW) -->
+  <script type="module" src="script.js" defer></script>
+
+  <!-- EMBED FIX SCRIPT -->
+  <script>
+    // Prevent iframe / embed focus bugs
+    if (window.top !== window.self) {
+      document.documentElement.classList.add("embedded");
+    }
+  </script>
 </head>
+
 <body>
+  <!-- BACKGROUND -->
   <div id="bg-animated" aria-hidden="true"></div>
   <canvas id="bgParticles" class="bg-particles"></canvas>
 
+  <!-- APP ROOT -->
   <div id="app">
     <header class="topbar">
       <h1 id="siteTitle">Tim Clicker :3</h1>
@@ -24,10 +54,10 @@
     </header>
 
     <main class="main">
-      <!-- Left: Clicker -->
+      <!-- LEFT PANEL -->
       <section class="left panel">
         <div id="playerPanel" class="center">
-          <label for="nameInput">Enter your name (saved per device)</label>
+          <label for="nameInput">Enter your name</label>
           <input id="nameInput" placeholder="Your name..." />
           <button id="saveNameBtn">Save & Start</button>
         </div>
@@ -56,11 +86,10 @@
             <button id="playClickRush">Click Rush (10s)</button>
             <div id="minigameArea"></div>
           </div>
-
         </div>
       </section>
 
-      <!-- Right: Shop & Leaderboard -->
+      <!-- RIGHT PANEL -->
       <aside class="right panel">
         <div class="panel inner">
           <button id="openShop" class="wide">Timu (Shop)</button>
@@ -77,8 +106,9 @@
       </aside>
     </main>
 
-    <footer class="footer">Tim Clicker :3 — made by Tim</footer>
+    <footer class="footer">
+      Tim Clicker :3 — made by Tim
+    </footer>
   </div>
-
 </body>
 </html>
