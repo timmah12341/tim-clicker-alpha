@@ -4,7 +4,7 @@ import { loadPlayer, savePlayer, updatePlayer } from "./firebase.js";
 
 const UID = "SINGLE_TEST_USER"; // replace with auth later
 
-const UPGRADES = {
+const UPGRADES = [
   { id:"u001", key:"bacteriophage", name:"Bacteriophage", cost:1, cps:0.1, icon:"upgrade0.1.png", tier:1, category:"generator" },
   { id:"u002", key:"tim_ema", name:"Tim-ema", cost:100, cps:2, icon:"upgrade1.png", tier:1, category:"generator" },
   { id:"u003", key:"chezburger", name:"Chezburger", cost:250, cps:4, icon:"upgrade1.5.png", tier:1, category:"generator" },
