@@ -49,8 +49,6 @@ const UPGRADES = [
   { id:"u042", key:"mosquito", name:"Weapon of Mosquito Destruction", cost:100_000_000_000_000_000_000, cps:500_000_000_000_000_000, icon:"upgrade41.png", tier:10, category:"generator" }
 ];
 
-};
-
 const SKINS = {
   default: { name: "Default", file: "assets/skins/default.png", cost: 0 },
   golden: { name: "Golden Tim", file: "assets/skins/golden.png", cost: 500 }
