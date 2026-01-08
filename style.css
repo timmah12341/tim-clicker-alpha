@@ -1,6 +1,5 @@
-html, body {
+body {
   margin: 0;
-  padding: 0;
   background: #111;
   color: #fff;
   font-family: sans-serif;
@@ -12,10 +11,17 @@ html, body {
   padding: 16px;
 }
 
+.hidden { display: none; }
+
+header div {
+  margin-bottom: 4px;
+}
+
 img {
-  width: 200px;
+  width: 220px;
   display: block;
   margin: 16px auto;
+  cursor: pointer;
 }
 
 button {
@@ -25,12 +31,14 @@ button {
   font-size: 16px;
 }
 
-.stats div {
-  margin: 4px 0;
+input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
 }
 
-#upgrades, #skins, #music, #crypto {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+#upgradeShop button,
+#skinShop button,
+#musicShop button {
+  text-align: left;
 }
