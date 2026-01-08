@@ -2,113 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-
-  <!-- MOBILE & EMBED SAFE VIEWPORT -->
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
-  />
-
-  <!-- EMBED / WEBVIEW COMPATIBILITY -->
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-  <!-- PREVENT EMBED BLOCKING -->
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
-  <title>Tim Clicker :3</title>
-
-  <!-- ICONS -->
-  <link rel="icon" href="cookie.png" type="image/png" />
-  <link rel="apple-touch-icon" href="cookie.png" />
-
-  <!-- STYLES -->
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Tim Clicker</title>
   <link rel="stylesheet" href="style.css" />
-
-  <!-- SCRIPT (MODULE SAFE FOR WEBVIEW) -->
-  <script type="module" src="script.js" defer></script>
-
-  <!-- EMBED FIX SCRIPT -->
-  <script>
-    // Prevent iframe / embed focus bugs
-    if (window.top !== window.self) {
-      document.documentElement.classList.add("embedded");
-    }
-  </script>
 </head>
-
 <body>
-  <!-- BACKGROUND -->
-  <div id="bg-animated" aria-hidden="true"></div>
-  <canvas id="bgParticles" class="bg-particles"></canvas>
 
-  <!-- APP ROOT -->
-  <div id="app">
-    <header class="topbar">
-      <h1 id="siteTitle">Tim Clicker :3</h1>
-      <div class="controls">
-        <button id="dailyBtn" title="Daily reward">🎁</button>
-        <button id="musicToggle" title="Toggle music">🔊</button>
-      </div>
-    </header>
+<div id="app">
+  <h1>Tim Clicker</h1>
 
-    <main class="main">
-      <!-- LEFT PANEL -->
-      <section class="left panel">
-        <div id="playerPanel" class="center">
-          <label for="nameInput">Enter your name</label>
-          <input id="nameInput" placeholder="Your name..." />
-          <button id="saveNameBtn">Save & Start</button>
-        </div>
+  <img id="mainImage" src="assets/skins/default.png" />
 
-        <div id="gamePanel" class="hidden">
-          <div id="topInfo" class="info-row">
-            <div>Player: <strong id="playerNameLabel">—</strong></div>
-            <div>Tims: <strong id="tims">0</strong></div>
-            <div>CPS: <strong id="cps">0</strong></div>
-          </div>
-
-          <div id="playArea">
-            <div id="timWrap">
-              <img id="timImg" src="cookie.png" alt="Tim" />
-              <div id="orbitContainer" aria-hidden="true"></div>
-            </div>
-          </div>
-
-          <div class="actions-row">
-            <button id="openMinigames">Minigames</button>
-            <button id="openSkins">Skins</button>
-          </div>
-
-          <div id="minigamePanel" class="subpanel hidden">
-            <h3>Minigames</h3>
-            <button id="playClickRush">Click Rush (10s)</button>
-            <div id="minigameArea"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- RIGHT PANEL -->
-      <aside class="right panel">
-        <div class="panel inner">
-          <button id="openShop" class="wide">Timu (Shop)</button>
-          <div id="shopPanel" class="subpanel hidden">
-            <h3>Timu Shop</h3>
-            <div id="shopList" class="shop-grid"></div>
-          </div>
-        </div>
-
-        <div class="panel inner" id="leaderBox">
-          <h3>Leaderboard</h3>
-          <ol id="leaderboard"></ol>
-        </div>
-      </aside>
-    </main>
-
-    <footer class="footer">
-      Tim Clicker :3 — made by Tim
-    </footer>
+  <div class="stats">
+    <div>Cookies: <span id="cookies">0</span></div>
+    <div>CPS: <span id="cps">0</span></div>
+    <div>Rebirths: <span id="rebirths">0</span></div>
   </div>
+
+  <button id="clickBtn">CLICK</button>
+  <button id="rebirthBtn">REBIRTH</button>
+
+  <h2>Upgrades</h2>
+  <div id="upgrades"></div>
+
+  <h2>Skins</h2>
+  <div id="skins"></div>
+
+  <h2>Music</h2>
+  <div id="music"></div>
+
+  <h2>Crypto</h2>
+  <div id="crypto"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
