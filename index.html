@@ -1,38 +1,44 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <title>Tim Clicker</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="app">
-  <h1>Tim Clicker</h1>
 
-  <img id="mainImage" src="assets/skins/default.png" />
-
-  <div class="stats">
-    <div>Cookies: <span id="cookies">0</span></div>
-    <div>CPS: <span id="cps">0</span></div>
-    <div>Rebirths: <span id="rebirths">0</span></div>
+  <div id="namePanel">
+    <h2>Enter name</h2>
+    <input id="nameInput" placeholder="Your name">
+    <button id="saveName">Start</button>
   </div>
 
-  <button id="clickBtn">CLICK</button>
-  <button id="rebirthBtn">REBIRTH</button>
+  <div id="game" class="hidden">
 
-  <h2>Upgrades</h2>
-  <div id="upgrades"></div>
+    <header>
+      <div>Player: <b id="playerName"></b></div>
+      <div>Tims: <b id="tims">0</b></div>
+      <div>CPS: <b id="cps">0</b></div>
+      <div>Rebirths: <b id="rebirths">0</b></div>
+    </header>
 
-  <h2>Skins</h2>
-  <div id="skins"></div>
+    <img id="timImage" src="assets/skins/default.png" alt="Tim">
 
-  <h2>Music</h2>
-  <div id="music"></div>
+    <button id="rebirthBtn">REBIRTH</button>
 
-  <h2>Crypto</h2>
-  <div id="crypto"></div>
+    <h3>Upgrades</h3>
+    <div id="upgradeShop"></div>
+
+    <h3>Skins</h3>
+    <div id="skinShop"></div>
+
+    <h3>Music</h3>
+    <div id="musicShop"></div>
+
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
