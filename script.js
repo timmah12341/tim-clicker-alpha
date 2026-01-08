@@ -1,9 +1,13 @@
 /************ FIREBASE ************/
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  databaseURL: "YOUR_DB_URL",
-  projectId: "YOUR_ID"
+  apiKey: "AIzaSyDleRW-O4yP9FJhuqQtMTVT0c_Dd1PPA98",
+  authDomain: "tim-clicker-alpha.firebaseapp.com",
+  databaseURL: "https://tim-clicker-alpha-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "tim-clicker-alpha",
+  storageBucket: "tim-clicker-alpha.firebasestorage.app",
+  messagingSenderId: "40617780569",
+  appId: "1:40617780569:web:1a82146a3554ab1e365848",
+  measurementId: "G-H73TX7JNVP"
 };
 
 firebase.initializeApp(firebaseConfig);
