@@ -1,249 +1,36 @@
-* {
-  box-sizing: border-box;
-  font-family: system-ui, sans-serif;
-}
-
-body {
+html, body {
   margin: 0;
-  background: #0f1115;
+  padding: 0;
+  background: #111;
   color: #fff;
-  overflow-x: hidden;
+  font-family: sans-serif;
 }
 
-#bg {
-  position: fixed;
-  inset: 0;
-  background-image: url("assets/backgrounds/default.png");
-  background-size: cover;
-  z-index: -1;
+#app {
+  max-width: 480px;
+  margin: auto;
+  padding: 16px;
 }
 
-.topbar {
+img {
+  width: 200px;
+  display: block;
+  margin: 16px auto;
+}
+
+button {
+  width: 100%;
   padding: 12px;
-  background: #1e2128;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#stats span {
-  margin-left: 12px;
-}
-
-main {
-  text-align: center;
-  padding: 20px;
-}
-
-#timImg {
-  width: 220px;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-
-#timImg:active {
-  transform: scale(1.05);
-}
-
-#panels button {
-  margin: 6px;
-  padding: 8px 14px;
-}
-
-.panel {
-  background: #1e2128;
-  padding: 12px;
-  margin-top: 12px;
-  border-radius: 8px;
-}
-
-.hidden {
-  display: none;
-}
-
-.shop-item, .skin-item {
-  display: flex;
-  justify-content: space-between;
   margin: 6px 0;
-}
-/* ================================
-   MOBILE + EMBED FIXES
-   ================================ */
-
-/* Detect embed mode */
-.embedded body {
-  overflow: hidden;
+  font-size: 16px;
 }
 
-/* Prevent zoom + weird tap behavior */
-* {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+.stats div {
+  margin: 4px 0;
 }
 
-/* Mobile root */
-@media (max-width: 900px) {
-  html,
-  body {
-    height: 100%;
-    overflow-x: hidden;
-  }
-
-  #app {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Stack layout instead of side-by-side */
-  .main {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .left.panel,
-  .right.panel {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /* Panels spacing */
-  .panel {
-    padding: 12px;
-    border-radius: 14px;
-  }
-
-  /* Header */
-  .topbar {
-    padding: 10px 12px;
-  }
-
-  .topbar h1 {
-    font-size: 1.2rem;
-  }
-
-  /* Controls buttons */
-  .controls button {
-    font-size: 18px;
-    padding: 6px 10px;
-  }
-
-  /* Player info */
-  .info-row {
-    flex-wrap: wrap;
-    gap: 6px;
-    font-size: 0.9rem;
-  }
-
-  /* TIM IMAGE FIX */
-  #timWrap {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  #timImg {
-    width: 160px;
-    height: auto;
-    max-width: 70vw;
-  }
-
-  /* Orbit items smaller */
-  .orbit-item img {
-    width: 32px;
-    height: 32px;
-  }
-
-  /* Actions buttons */
-  .actions-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .actions-row button {
-    flex: 1;
-    font-size: 0.9rem;
-  }
-
-  /* Shop */
-  .shop-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .shop-item {
-    padding: 10px;
-  }
-
-  .shop-item img {
-    width: 36px;
-    height: 36px;
-  }
-
-  .buy-btn {
-    padding: 6px 10px;
-    font-size: 0.9rem;
-  }
-
-  /* Leaderboard */
-  #leaderBox {
-    max-height: 240px;
-    overflow-y: auto;
-  }
-
-  #leaderboard li {
-    font-size: 0.85rem;
-  }
-
-  /* Minigames */
-  #minigamePanel button {
-    width: 100%;
-    margin-bottom: 6px;
-  }
-
-  /* Background particles lighter on mobile */
-  #bgParticles {
-    opacity: 0.25;
-  }
-
-  .orb {
-    filter: blur(40px);
-  }
-}
-
-/* ================================
-   SMALL PHONES (VERY SMALL)
-   ================================ */
-@media (max-width: 420px) {
-  #timImg {
-    width: 130px;
-  }
-
-  .topbar h1 {
-    font-size: 1rem;
-  }
-
-  .info-row {
-    font-size: 0.8rem;
-  }
-
-  button {
-    font-size: 0.85rem;
-  }
-}
-
-/* ================================
-   EMBED / WEBVIEW SAFETY
-   ================================ */
-.embedded .footer {
-  display: none;
-}
-
-.embedded #bgParticles {
-  pointer-events: none;
-}
-
-.embedded .panel {
-  box-shadow: none;
+#upgrades, #skins, #music, #crypto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
