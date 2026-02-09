@@ -9,6 +9,7 @@
 <body>
 
 <div id="app">
+  <div id="firebaseStatus"></div>
 
   <div id="namePanel">
     <h2>Enter name</h2>
@@ -23,20 +24,45 @@
       <div>Tims: <b id="tims">0</b></div>
       <div>CPS: <b id="cps">0</b></div>
       <div>Rebirths: <b id="rebirths">0</b></div>
+      <div>Fake Crypto: <b id="cryptoWallet">0</b> TIMC</div>
+      <div>TIMC price: <b id="cryptoPrice">0</b></div>
+      <div>Event: <b id="eventLabel">none</b></div>
     </header>
 
     <img id="timImage" src="assets/skins/default.png" alt="Tim">
 
     <button id="rebirthBtn">REBIRTH</button>
 
-    <h3>Upgrades</h3>
+    <h3>Upgrades (CPS)</h3>
     <div id="upgradeShop"></div>
 
-    <h3>Skins</h3>
+    <h3>Skins (33)</h3>
     <div id="skinShop"></div>
 
-    <h3>Music</h3>
+    <h3>Music (buyable)</h3>
     <div id="musicShop"></div>
+
+    <h3>Backgrounds (buyable)</h3>
+    <div id="backgroundShop"></div>
+
+    <h3>Minigames</h3>
+    <div class="panel">
+      <button id="coinFlipBtn">Coin Flip (cost 100, win 220)</button>
+      <button id="guessBtn">Lucky Guess (cost 250, win 750)</button>
+      <div id="miniResult"></div>
+    </div>
+
+    <h3>Fake Crypto</h3>
+    <div class="panel">
+      <button id="buyCryptoBtn">Buy 1 TIMC</button>
+      <button id="sellCryptoBtn">Sell 1 TIMC</button>
+    </div>
+
+    <h3>Admin Events</h3>
+    <div class="panel">
+      <input id="adminCodeInput" placeholder="Admin event code">
+      <button id="activateEventBtn">Activate event</button>
+    </div>
 
   </div>
 </div>
