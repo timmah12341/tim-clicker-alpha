@@ -6,6 +6,15 @@ const firebaseConfig = {
   projectId: "tim-clicker-alpha",
   storageBucket: "tim-clicker-alpha.firebasestorage.app",
   messagingSenderId: "40617780569",
+  appId: "1:40617780569:web:1a82146a3554ab1e365848"
+};
+
+let auth;
+let db;
+let uid;
+let firebaseReady = false;
+
+
   appId: "1:40617780569:web:1a82146a3554ab1e365848",
   measurementId: "G-H73TX7JNVP"
 };
@@ -21,6 +30,7 @@ try {
   db = firebase.database();
   firebaseReady = true;
 } catch (err) {
+} catch {
   firebaseReady = false;
 }
 
@@ -39,6 +49,46 @@ const CPS_UPGRADES = {
   goldenRatio: { label: "Golden ratio (x1.618 cps)", cost: 22000, type: "cps", value: 1.61803398875 },
   clone: { label: "Clone (x2 cps, one time)", cost: 85000, type: "cps", value: 2 }
 };
+  cursor: { base: 10, cps: 1 },
+  factory: { base: 120, cps: 7 },
+  lab: { base: 1100, cps: 55 },
+  portal: { base: 9000, cps: 430 },
+  quantumCore: { base: 50000, cps: 2500 } // requested 1 extra upgrade
+};
+
+const skinFiles = [
+  "assets/skins/default.png",
+  "assets/skins/gold.png",
+  "skin_tim.png",
+  "skin_galaxy.png"
+];
+
+const SKINS = Array.from({ length: 33 }, (_, i) => {
+  const id = `skin_${i + 1}`;
+  return {
+    id,
+    mult: 1 + i * 0.04,
+    file: skinFiles[i % skinFiles.length],
+    cost: i === 0 ? 0 : 350 * (i + 1)
+  };
+});
+
+const SKIN_FILES = ["assets/skins/default.png", "assets/skins/gold.png", "skin_tim.png", "skin_galaxy.png"];
+const SKIN_NAMES = [
+  "Philips stofzuiger D380", "Mr. Timmah", "Kirbtim", "ScoutTim", "Kartonnen doos", "Nyan cat",
+  "Blueprint", "Tima Cola™", "Hologram", "Marble", "Misprint", "Reverse", "Solar", "TIM",
+  "Tim driving in his car", "Joker of Tims", "Spambot Tim", "JOHAN", "Assassin's Tim", "BTS Tim",
+  "Tim Of War", "AMONG US", "G.O.A.T.", "Le Puffervis", "TimTim", "Baby Tim", "SuperTim",
+  "NeutronenTim", "Obama", "rat king tim", "Tim The Plague Serpent", "Blooket Tim", "Terminal Tim"
+];
+
+const SKINS = SKIN_NAMES.map((name, i) => ({
+  id: `skin_${i + 1}`,
+  name,
+  file: SKIN_FILES[i % SKIN_FILES.length],
+  mult: 1 + i * 0.04,
+  cost: i === 0 ? 0 : 550 + i * 450
+}));
 
 const SKIN_FILES = ["assets/skins/default.png", "assets/skins/gold.png", "skin_tim.png", "skin_galaxy.png"];
 const SKIN_NAMES = [
@@ -98,6 +148,21 @@ const ADMIN_CODES = {
   DISCO: "DISCO",
   NOORDERLICHT: "NOORDERLICHT",
   RESET: "NONE"
+  lofi1: { cost: 1200, file: "assets/music/lofi1.wav" },
+  lofi2: { cost: 2500, file: "assets/music/lofi2.wav" }
+};
+
+const BACKGROUNDS = {
+  dark: { cost: 0, file: null, color: "#111" },
+  vapor: { cost: 1700, file: "BgBg.png", color: "#111" },
+  ballGuys: { cost: 2800, file: "Ball Guys Background.png", color: "#111" },
+  poster: { cost: 3500, file: "assets/backgrounds/DAVDD.png", color: "#000" }
+};
+
+const ADMIN_EVENTS = {
+  TIMRAIN: { label: "Tim Rain x2", mult: 2 },
+  SUPERBOOST: { label: "Super Boost x3", mult: 3 },
+  CALM: { label: "Calm Mode x1", mult: 1 }
 };
 
 /******** STATE ********/
@@ -117,6 +182,33 @@ const defaultState = {
   activeCoin: "JOHAN",
   coinPrices: { JOHAN: 120, CHATGPT: 80, KIRB: 210 },
   coinWallet: { JOHAN: 0, CHATGPT: 0, KIRB: 0 }
+  tims: 0,
+  rebirths: 0,
+  upgrades: {},
+  cpsUpgradesOwned: [],
+  skinsOwned: ["skin_1"],
+  activeSkin: "skin_1",
+  musicOwned: [],
+  activeMusic: "",
+  backgroundsOwned: ["dark"],
+  activeBackground: "dark",
+  activeEvent: "NONE",
+  activeCoin: "JOHAN",
+  coinPrices: { JOHAN: 120, CHATGPT: 80, KIRB: 210 },
+  coinWallet: { JOHAN: 0, CHATGPT: 0, KIRB: 0 }
+  name: null,
+  tims: 0,
+  rebirths: 0,
+  upgrades: {},
+  skinsOwned: ["skin_1"],
+  activeSkin: "skin_1",
+  musicOwned: [],
+  activeMusic: null,
+  backgroundsOwned: ["dark"],
+  activeBackground: "dark",
+  cryptoWallet: 0,
+  cryptoPrice: 120,
+  activeEvent: "none"
 };
 
 let state = { ...defaultState };
@@ -126,27 +218,19 @@ let musicPlayer;
 const el = (id) => document.getElementById(id);
 const cost = (base, owned) => Math.floor(base * Math.pow(1.15, owned));
 const hasCpsUpgrade = (id) => state.cpsUpgradesOwned.includes(id);
+const cost = (b, n) => Math.floor(b * Math.pow(1.15, n));
 const getSkin = (id) => SKINS.find((s) => s.id === id) || SKINS[0];
 
 function saveLocal() {
-  try {
-    localStorage.setItem("tim_clicker_save", JSON.stringify(state));
-  } catch (err) {
-    // Some browsers/private modes can block localStorage writes.
-  }
+  localStorage.setItem("tim_clicker_save", JSON.stringify(state));
 }
 
 function loadLocal() {
-  let raw;
-  try {
-    raw = localStorage.getItem("tim_clicker_save");
-  } catch (err) {
-    raw = null;
-  }
+  const raw = localStorage.getItem("tim_clicker_save");
   if (!raw) return;
   try {
     state = { ...defaultState, ...JSON.parse(raw) };
-  } catch (err) {
+  } catch {
     state = { ...defaultState };
   }
 }
@@ -170,6 +254,15 @@ function applyBackground() {
 
 function clickPower() {
   return hasCpsUpgrade("leBeterClick") ? 1.88 : 1;
+function showFirebaseStatus() {
+  const status = el("firebaseStatus");
+  if (!firebaseReady) {
+    status.textContent = "Firebase offline: using local save.";
+    status.className = "warning";
+    return;
+  }
+  status.textContent = "Firebase connected.";
+  status.className = "ok";
 }
 
 function cps() {
@@ -184,8 +277,7 @@ function cps() {
 
   total *= getSkin(state.activeSkin).mult;
   total *= (1 + state.rebirths * 0.25);
-  const activeEvent = EVENTS[state.activeEvent] || EVENTS.NONE;
-  total *= activeEvent.mult;
+  total *= (EVENTS[state.activeEvent]?.mult || 1);
   return total;
 }
 
@@ -195,17 +287,44 @@ function updateUI() {
   el("tims").textContent = Math.floor(state.tims);
   el("cps").textContent = cps().toFixed(1);
   el("rebirths").textContent = state.rebirths;
-  const activeEvent = EVENTS[state.activeEvent] || EVENTS.NONE;
-  el("eventLabel").textContent = activeEvent.label;
+  el("eventLabel").textContent = EVENTS[state.activeEvent]?.label || "none";
   el("activeCoinLabel").textContent = CRYPTO[coin].label;
   el("cryptoPrice").textContent = state.coinPrices[coin].toFixed(1);
   el("cryptoWallet").textContent = state.coinWallet[coin].toFixed(2);
+  let v = 0;
+  for (const id in state.upgrades) {
+    const upgrade = UPGRADES[id];
+    if (upgrade) v += upgrade.cps * state.upgrades[id];
+  }
+
+  const skinMult = getSkin(state.activeSkin).mult;
+  const rebirthMult = 1 + state.rebirths * 0.25;
+  const eventMult = ADMIN_EVENTS[state.activeEvent]?.mult || 1;
+  return v * skinMult * rebirthMult * eventMult;
+}
+
+function applyBackground() {
+  const bg = BACKGROUNDS[state.activeBackground] || BACKGROUNDS.dark;
+  document.body.style.backgroundColor = bg.color;
+  document.body.style.backgroundImage = bg.file ? `url("${bg.file}")` : "none";
+  document.body.style.backgroundSize = "cover";
+}
+
+function updateUI() {
+  el("playerName").textContent = state.name || "";
+  el("tims").textContent = Math.floor(state.tims);
+  el("cps").textContent = cps().toFixed(1);
+  el("rebirths").textContent = state.rebirths;
+  el("cryptoWallet").textContent = state.cryptoWallet.toFixed(2);
+  el("cryptoPrice").textContent = state.cryptoPrice.toFixed(1);
+  el("eventLabel").textContent = ADMIN_EVENTS[state.activeEvent]?.label || "none";
 }
 
 function renderUpgrades() {
   const box = el("upgradeShop");
   box.innerHTML = "";
   Object.entries(UPGRADES).forEach(([id, up]) => {
+  for (const id in UPGRADES) {
     const owned = state.upgrades[id] || 0;
     const c = cost(up.base, owned);
     const b = document.createElement("button");
@@ -255,6 +374,18 @@ function renderSkins() {
       }
       state.activeSkin = skin.id;
       el("timImage").src = skin.file;
+  SKINS.forEach((s) => {
+    const owned = state.skinsOwned.includes(s.id);
+    const b = document.createElement("button");
+    b.textContent = `${s.id} ${owned ? "(owned)" : `- ${s.cost}`}`;
+    b.onclick = () => {
+      if (!owned) {
+        if (state.tims < s.cost) return;
+        state.tims -= s.cost;
+        state.skinsOwned.push(s.id);
+      }
+      state.activeSkin = s.id;
+      el("timImage").src = s.file;
       saveNow();
     };
     box.appendChild(b);
@@ -282,6 +413,25 @@ function renderMusic() {
       musicPlayer = new Audio(music.file);
       musicPlayer.loop = true;
       musicPlayer.play().catch(() => {});
+  for (const id in MUSIC) {
+    const m = MUSIC[id];
+    const owned = state.musicOwned.includes(id);
+    const b = document.createElement("button");
+    b.textContent = `${id} ${owned ? "(owned/play)" : `- ${m.cost}`}`;
+    b.onclick = () => {
+      if (!owned) {
+        if (state.tims < m.cost) return;
+        state.tims -= m.cost;
+        state.musicOwned.push(id);
+      }
+
+      if (musicPlayer) {
+        musicPlayer.pause();
+        musicPlayer.currentTime = 0;
+      }
+      musicPlayer = new Audio(m.file);
+      musicPlayer.loop = true;
+      musicPlayer.play();
       state.activeMusic = id;
       saveNow();
     };
@@ -383,14 +533,145 @@ function tickCrypto() {
   });
 }
 
+function renderBackgrounds() {
+  const box = el("backgroundShop");
+  box.innerHTML = "";
+  for (const id in BACKGROUNDS) {
+    const item = BACKGROUNDS[id];
+    const owned = state.backgroundsOwned.includes(id);
+    const b = document.createElement("button");
+    b.textContent = `${id} ${owned ? "(owned)" : `- ${item.cost}`}`;
+    b.onclick = () => {
+      if (!owned) {
+        if (state.tims < item.cost) return;
+        state.tims -= item.cost;
+        state.backgroundsOwned.push(id);
+      }
+      state.activeBackground = id;
+      applyBackground();
+      saveNow();
+    };
+    box.appendChild(b);
+  });
+}
+
+function renderBackgrounds() {
+  const box = el("backgroundShop");
+  box.innerHTML = "";
+  Object.entries(BACKGROUNDS).forEach(([id, bg]) => {
+    const owned = state.backgroundsOwned.includes(id);
+    const b = document.createElement("button");
+    b.className = "shop-item";
+    b.textContent = owned ? `${bg.label} (owned)` : `${bg.label} — ${bg.cost}`;
+    b.onclick = () => {
+      if (!owned) {
+        if (state.tims < bg.cost) return;
+        state.tims -= bg.cost;
+        state.backgroundsOwned.push(id);
+      }
+      state.activeBackground = id;
+      applyBackground();
+      saveNow();
+    };
+    box.appendChild(b);
+  });
+}
+
+function runMinigame(id) {
+  const game = MINIGAMES[id];
+  if (!game || state.tims < game.cost) return;
+  state.tims -= game.cost;
+  const winChance = id === "slot" ? 0.22 : 0.35;
+  const won = Math.random() < winChance;
+  if (won) state.tims += game.reward;
+  el("miniResult").textContent = won ? `${game.label}: WIN +${game.reward}` : `${game.label}: lose`;
+  saveNow();
+}
+
+function renderMinigames() {
+  const box = el("minigameShop");
+  box.innerHTML = "";
+  Object.entries(MINIGAMES).forEach(([id, game]) => {
+    const b = document.createElement("button");
+    b.className = "shop-item";
+    b.textContent = game.label;
+    b.onclick = () => runMinigame(id);
+    box.appendChild(b);
+  });
+}
+
+function renderCrypto() {
+  const box = el("cryptoShop");
+  box.innerHTML = "";
+
+  Object.entries(CRYPTO).forEach(([id, coin]) => {
+    const select = document.createElement("button");
+    select.className = "shop-item";
+    select.textContent = `Use ${coin.label}`;
+    select.onclick = () => {
+      state.activeCoin = id;
+      saveNow();
+    };
+    box.appendChild(select);
+  });
+
+  const buy = document.createElement("button");
+  buy.className = "shop-item";
+  buy.textContent = "Buy 1 coin";
+  buy.onclick = () => {
+    const coin = state.activeCoin;
+    const price = state.coinPrices[coin];
+    if (state.tims < price) return;
+    state.tims -= price;
+    state.coinWallet[coin] += 1;
+    saveNow();
+  };
+
+  const sell = document.createElement("button");
+  sell.className = "shop-item";
+  sell.textContent = "Sell 1 coin";
+  sell.onclick = () => {
+    const coin = state.activeCoin;
+    if (state.coinWallet[coin] < 1) return;
+    state.coinWallet[coin] -= 1;
+    state.tims += state.coinPrices[coin];
+    saveNow();
+  };
+
+  box.appendChild(buy);
+  box.appendChild(sell);
+}
+
+function tickCrypto() {
+  Object.keys(CRYPTO).forEach((id) => {
+    const swing = (Math.random() - 0.5) * CRYPTO[id].vol;
+    state.coinPrices[id] = Math.max(15, state.coinPrices[id] + swing);
+  });
+}
+
+function tickCrypto() {
+  const swing = (Math.random() - 0.5) * 12;
+  state.cryptoPrice = Math.max(20, state.cryptoPrice + swing);
+}
+
+function saveNow() {
+  saveLocal();
+  if (firebaseReady && uid) {
+    db.ref("users/" + uid).set(state).catch(() => {});
+  }
+}
+
 /******** EVENTS ********/
 el("timImage").onclick = () => {
   state.tims += clickPower() * (1 + state.rebirths * 0.1);
+  const clickBonus = 1 + state.rebirths * 0.1;
+  state.tims += clickBonus;
 };
 
 el("rebirthBtn").onclick = () => {
   const req = 1e6 * Math.pow(3, state.rebirths);
   if (state.tims < req) return;
+
   state.tims = 0;
   state.upgrades = {};
   state.rebirths += 1;
@@ -418,6 +699,49 @@ el("activateEventBtn").onclick = () => {
 };
 
 /******** LOOP ********/
+};
+
+el("coinFlipBtn").onclick = () => {
+  if (state.tims < 100) return;
+  state.tims -= 100;
+  const win = Math.random() < 0.5;
+  if (win) state.tims += 220;
+  el("miniResult").textContent = win ? "Coin Flip: WIN" : "Coin Flip: LOSE";
+  saveNow();
+};
+
+el("guessBtn").onclick = () => {
+  if (state.tims < 250) return;
+  state.tims -= 250;
+  const lucky = Math.floor(Math.random() * 5) === 0;
+  if (lucky) state.tims += 750;
+  el("miniResult").textContent = lucky ? "Lucky Guess: JACKPOT" : "Lucky Guess: Nope";
+  saveNow();
+};
+
+el("buyCryptoBtn").onclick = () => {
+  if (state.tims < state.cryptoPrice) return;
+  state.tims -= state.cryptoPrice;
+  state.cryptoWallet += 1;
+  saveNow();
+};
+
+el("sellCryptoBtn").onclick = () => {
+  if (state.cryptoWallet < 1) return;
+  state.cryptoWallet -= 1;
+  state.tims += state.cryptoPrice;
+  saveNow();
+};
+
+el("activateEventBtn").onclick = () => {
+  const code = el("adminCodeInput").value.trim().toUpperCase();
+  if (!ADMIN_EVENTS[code]) return;
+  state.activeEvent = code;
+  el("adminCodeInput").value = "";
+  saveNow();
+};
+
+/******** LOOPS ********/
 setInterval(() => {
   state.tims += cps() / 10;
   tickCrypto();
@@ -433,6 +757,10 @@ setInterval(() => {
 }, 100);
 
 /******** BOOT ********/
+  saveNow();
+}, 100);
+
+/******** LOGIN ********/
 function startGame() {
   el("namePanel").classList.add("hidden");
   el("game").classList.remove("hidden");
@@ -453,6 +781,8 @@ function boot() {
   auth.signInAnonymously()
     .then((result) => {
       uid = result.user.uid;
+    .then((r) => {
+      uid = r.user.uid;
       return db.ref("users/" + uid).once("value");
     })
     .then((snap) => {
@@ -468,6 +798,9 @@ el("saveName").onclick = () => {
   const name = el("nameInput").value.trim();
   if (!name) return;
   state.name = name;
+  const n = el("nameInput").value.trim();
+  if (!n) return;
+  state.name = n;
   startGame();
   saveNow();
 };
