@@ -67,6 +67,19 @@ body {
 .stat-grid div {
   display: grid;
   gap: 2px;
+  background: #111;
+  color: #fff;
+  font-family: sans-serif;
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 540px;
+  margin: auto;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .stat-grid span {
@@ -138,3 +151,28 @@ button:active {
   color: var(--accent-2);
   font-weight: 700;
 }
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+#upgradeShop button,
+#skinShop button,
+#musicShop button,
+#backgroundShop button {
+  text-align: left;
+}
+
+.panel {
+  border: 1px solid #555;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+#firebaseStatus {
+  padding: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+#firebaseStatus.ok { color: #8dff8d; }
+#firebaseStatus.warning { color: #ffd37d; }
