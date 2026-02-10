@@ -7,17 +7,25 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div id="app">
   <div id="firebaseStatus"></div>
 
-  <div id="namePanel">
-    <h2>Enter name</h2>
-    <input id="nameInput" placeholder="Your name">
+  <div id="namePanel" class="card">
+    <h2>Welkom bij #Tim-Clicker</h2>
+    <input id="nameInput" placeholder="Wat is je ingame naam?">
     <button id="saveName">Start</button>
   </div>
 
   <div id="game" class="hidden">
+    <header class="card stat-grid">
+      <div><span>Player</span><b id="playerName"></b></div>
+      <div><span>Tims</span><b id="tims">0</b></div>
+      <div><span>CPS</span><b id="cps">0</b></div>
+      <div><span>Rebirths</span><b id="rebirths">0</b></div>
+      <div><span>Event</span><b id="eventLabel">none</b></div>
+      <div><span>Active coin</span><b id="activeCoinLabel">Johan coin</b></div>
+      <div><span>Coin price</span><b id="cryptoPrice">0</b></div>
+      <div><span>Wallet</span><b id="cryptoWallet">0</b></div>
 
     <header>
       <div>Player: <b id="playerName"></b></div>
@@ -29,10 +37,50 @@
       <div>Event: <b id="eventLabel">none</b></div>
     </header>
 
-    <img id="timImage" src="assets/skins/default.png" alt="Tim">
+    <section class="card hero-card">
+      <img id="timImage" src="assets/skins/default.png" alt="Tim">
+      <button id="rebirthBtn">REBIRTH</button>
+    </section>
 
-    <button id="rebirthBtn">REBIRTH</button>
+    <section class="card">
+      <h3>Upgrades (CPS)</h3>
+      <div id="upgradeShop" class="shop-grid"></div>
+      <h3>Special CPS Upgrades</h3>
+      <div id="cpsUpgradeShop" class="shop-grid"></div>
+    </section>
 
+    <section class="card">
+      <h3>Skins (33)</h3>
+      <div id="skinShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Music (buyable)</h3>
+      <div id="musicShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Backgrounds (buyable)</h3>
+      <div id="backgroundShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Minigames</h3>
+      <div id="minigameShop" class="shop-grid"></div>
+      <div id="miniResult"></div>
+    </section>
+
+    <section class="card">
+      <h3>Fake Crypto</h3>
+      <div id="cryptoShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Admin Events / Admin Panel</h3>
+      <input id="adminCodeInput" placeholder="Admin code / event code">
+      <button id="activateEventBtn">Activate</button>
+      <div id="adminResult"></div>
+    </section>
     <h3>Upgrades (CPS)</h3>
     <div id="upgradeShop"></div>
 
