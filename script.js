@@ -14,6 +14,7 @@ let db;
 let uid;
 let firebaseReady = false;
 
+
   appId: "1:40617780569:web:1a82146a3554ab1e365848",
   measurementId: "G-H73TX7JNVP"
 };
@@ -28,6 +29,7 @@ try {
   auth = firebase.auth();
   db = firebase.database();
   firebaseReady = true;
+} catch (err) {
 } catch {
   firebaseReady = false;
 }
@@ -70,6 +72,23 @@ const SKINS = Array.from({ length: 33 }, (_, i) => {
     cost: i === 0 ? 0 : 350 * (i + 1)
   };
 });
+
+const SKIN_FILES = ["assets/skins/default.png", "assets/skins/gold.png", "skin_tim.png", "skin_galaxy.png"];
+const SKIN_NAMES = [
+  "Philips stofzuiger D380", "Mr. Timmah", "Kirbtim", "ScoutTim", "Kartonnen doos", "Nyan cat",
+  "Blueprint", "Tima Cola™", "Hologram", "Marble", "Misprint", "Reverse", "Solar", "TIM",
+  "Tim driving in his car", "Joker of Tims", "Spambot Tim", "JOHAN", "Assassin's Tim", "BTS Tim",
+  "Tim Of War", "AMONG US", "G.O.A.T.", "Le Puffervis", "TimTim", "Baby Tim", "SuperTim",
+  "NeutronenTim", "Obama", "rat king tim", "Tim The Plague Serpent", "Blooket Tim", "Terminal Tim"
+];
+
+const SKINS = SKIN_NAMES.map((name, i) => ({
+  id: `skin_${i + 1}`,
+  name,
+  file: SKIN_FILES[i % SKIN_FILES.length],
+  mult: 1 + i * 0.04,
+  cost: i === 0 ? 0 : 550 + i * 450
+}));
 
 const SKIN_FILES = ["assets/skins/default.png", "assets/skins/gold.png", "skin_tim.png", "skin_galaxy.png"];
 const SKIN_NAMES = [
@@ -149,6 +168,20 @@ const ADMIN_EVENTS = {
 /******** STATE ********/
 const defaultState = {
   name: "",
+  tims: 0,
+  rebirths: 0,
+  upgrades: {},
+  cpsUpgradesOwned: [],
+  skinsOwned: ["skin_1"],
+  activeSkin: "skin_1",
+  musicOwned: [],
+  activeMusic: "",
+  backgroundsOwned: ["dark"],
+  activeBackground: "dark",
+  activeEvent: "NONE",
+  activeCoin: "JOHAN",
+  coinPrices: { JOHAN: 120, CHATGPT: 80, KIRB: 210 },
+  coinWallet: { JOHAN: 0, CHATGPT: 0, KIRB: 0 }
   tims: 0,
   rebirths: 0,
   upgrades: {},
@@ -519,7 +552,101 @@ function renderBackgrounds() {
       saveNow();
     };
     box.appendChild(b);
-  }
+  });
+}
+
+function renderBackgrounds() {
+  const box = el("backgroundShop");
+  box.innerHTML = "";
+  Object.entries(BACKGROUNDS).forEach(([id, bg]) => {
+    const owned = state.backgroundsOwned.includes(id);
+    const b = document.createElement("button");
+    b.className = "shop-item";
+    b.textContent = owned ? `${bg.label} (owned)` : `${bg.label} — ${bg.cost}`;
+    b.onclick = () => {
+      if (!owned) {
+        if (state.tims < bg.cost) return;
+        state.tims -= bg.cost;
+        state.backgroundsOwned.push(id);
+      }
+      state.activeBackground = id;
+      applyBackground();
+      saveNow();
+    };
+    box.appendChild(b);
+  });
+}
+
+function runMinigame(id) {
+  const game = MINIGAMES[id];
+  if (!game || state.tims < game.cost) return;
+  state.tims -= game.cost;
+  const winChance = id === "slot" ? 0.22 : 0.35;
+  const won = Math.random() < winChance;
+  if (won) state.tims += game.reward;
+  el("miniResult").textContent = won ? `${game.label}: WIN +${game.reward}` : `${game.label}: lose`;
+  saveNow();
+}
+
+function renderMinigames() {
+  const box = el("minigameShop");
+  box.innerHTML = "";
+  Object.entries(MINIGAMES).forEach(([id, game]) => {
+    const b = document.createElement("button");
+    b.className = "shop-item";
+    b.textContent = game.label;
+    b.onclick = () => runMinigame(id);
+    box.appendChild(b);
+  });
+}
+
+function renderCrypto() {
+  const box = el("cryptoShop");
+  box.innerHTML = "";
+
+  Object.entries(CRYPTO).forEach(([id, coin]) => {
+    const select = document.createElement("button");
+    select.className = "shop-item";
+    select.textContent = `Use ${coin.label}`;
+    select.onclick = () => {
+      state.activeCoin = id;
+      saveNow();
+    };
+    box.appendChild(select);
+  });
+
+  const buy = document.createElement("button");
+  buy.className = "shop-item";
+  buy.textContent = "Buy 1 coin";
+  buy.onclick = () => {
+    const coin = state.activeCoin;
+    const price = state.coinPrices[coin];
+    if (state.tims < price) return;
+    state.tims -= price;
+    state.coinWallet[coin] += 1;
+    saveNow();
+  };
+
+  const sell = document.createElement("button");
+  sell.className = "shop-item";
+  sell.textContent = "Sell 1 coin";
+  sell.onclick = () => {
+    const coin = state.activeCoin;
+    if (state.coinWallet[coin] < 1) return;
+    state.coinWallet[coin] -= 1;
+    state.tims += state.coinPrices[coin];
+    saveNow();
+  };
+
+  box.appendChild(buy);
+  box.appendChild(sell);
+}
+
+function tickCrypto() {
+  Object.keys(CRYPTO).forEach((id) => {
+    const swing = (Math.random() - 0.5) * CRYPTO[id].vol;
+    state.coinPrices[id] = Math.max(15, state.coinPrices[id] + swing);
+  });
 }
 
 function tickCrypto() {
