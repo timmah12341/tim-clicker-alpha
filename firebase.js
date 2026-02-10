@@ -14,8 +14,7 @@ const firebaseConfig = {
   projectId: "tim-clicker-alpha",
   storageBucket: "tim-clicker-alpha.firebasestorage.app",
   messagingSenderId: "40617780569",
-  appId: "1:40617780569:web:1a82146a3554ab1e365848",
-  measurementId: "G-H73TX7JNVP"
+  appId: "1:40617780569:web:1a82146a3554ab1e365848"
 };
 
 const app = initializeApp(firebaseConfig);
