@@ -92,74 +92,62 @@ body {
   font-size: 18px;
 }
 
-.hero-card {
+.status { color: var(--muted); }
+
+.stats {
   display: grid;
-  justify-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
 }
+
+.stats span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.stats b { font-size: 20px; }
+
+.click-area { text-align: center; }
 
 #timImage {
-  width: 220px;
-  max-width: 65vw;
-  margin-bottom: 8px;
+  width: min(230px, 60vw);
   cursor: pointer;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, .4);
-}
-
-h2, h3 {
-  margin: 0 0 10px;
-}
-
-input,
-button {
-  width: 100%;
+  border-radius: 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+}
+
+input, button, select {
+  width: 100%;
   padding: 10px;
-  font-size: 15px;
-  color: var(--txt);
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #0f1730;
+  color: var(--text);
+  margin: 6px 0;
 }
 
 button {
   cursor: pointer;
-  background: linear-gradient(135deg, rgba(124, 140, 255, .35), rgba(39, 228, 203, .18));
-  transition: transform .08s ease, border-color .12s ease;
+  background: linear-gradient(180deg, #3559a7, #264889);
 }
 
-button:hover {
-  border-color: rgba(255, 255, 255, .65);
-}
-
-button:active {
-  transform: scale(.98);
-}
-
-.shop-grid {
+.grid {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-.shop-item {
-  text-align: left;
+.inline {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-#miniResult,
-#adminResult {
-  margin-top: 10px;
-  color: var(--accent-2);
-  font-weight: 700;
-}
-  font-size: 16px;
-  box-sizing: border-box;
-}
-
-#upgradeShop button,
-#skinShop button,
-#musicShop button,
-#backgroundShop button {
-  text-align: left;
+body.bg-cover {
+  background-size: cover;
+  background-position: center;
 }
 
 .panel {
