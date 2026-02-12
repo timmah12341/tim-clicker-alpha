@@ -1,44 +1,92 @@
-body {
-  margin: 0;
-  background: #111;
-  color: #fff;
-  font-family: sans-serif;
+:root {
+  --bg: #0b1020;
+  --card: #141c31;
+  --line: #2b3b65;
+  --text: #edf2ff;
+  --muted: #a9b9e8;
+  --accent: #6fa2ff;
 }
 
-#app {
-  max-width: 480px;
-  margin: auto;
-  padding: 16px;
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at top, #1f2a4e 0%, var(--bg) 60%);
+  min-height: 100vh;
+}
+
+.container {
+  width: min(980px, 95vw);
+  margin: 18px auto;
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
 }
 
 .hidden { display: none; }
 
-header div {
-  margin-bottom: 4px;
+.status { color: var(--muted); }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
 }
 
-img {
-  width: 220px;
+.stats span {
   display: block;
-  margin: 16px auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.stats b { font-size: 20px; }
+
+.click-area { text-align: center; }
+
+#timImage {
+  width: min(230px, 60vw);
   cursor: pointer;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+input, button, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #0f1730;
+  color: var(--text);
+  margin: 6px 0;
 }
 
 button {
-  width: 100%;
-  padding: 12px;
-  margin: 6px 0;
-  font-size: 16px;
+  cursor: pointer;
+  background: linear-gradient(180deg, #3559a7, #264889);
 }
 
-input {
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
+.grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-#upgradeShop button,
-#skinShop button,
-#musicShop button {
-  text-align: left;
+.inline {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+body.bg-cover {
+  background-size: cover;
+  background-position: center;
 }
