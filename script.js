@@ -659,7 +659,6 @@ function saveNow() {
   if (firebaseReady && uid) {
     db.ref("users/" + uid).set(state).catch(() => {});
   }
-}
 
 /******** EVENTS ********/
 el("timImage").onclick = () => {
