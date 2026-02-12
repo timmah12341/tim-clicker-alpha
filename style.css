@@ -1,24 +1,29 @@
 :root {
-  --bg: #0b1020;
-  --card: #141c31;
-  --line: #2b3b65;
-  --text: #edf2ff;
-  --muted: #a9b9e8;
-  --accent: #6fa2ff;
+  --bg: #090b1a;
+  --card: rgba(13, 16, 37, 0.85);
+  --line: rgba(153, 170, 255, 0.35);
+  --txt: #f6f8ff;
+  --muted: #a6b2e9;
+  --accent: #7c8cff;
+  --accent-2: #27e4cb;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  color: var(--text);
-  background: radial-gradient(circle at top, #1f2a4e 0%, var(--bg) 60%);
   min-height: 100vh;
+  color: var(--txt);
+  font-family: Inter, Segoe UI, Arial, sans-serif;
+  background: radial-gradient(circle at 20% 20%, #2f2b6b 0%, var(--bg) 42%, #05060f 100%);
+  background-size: cover;
+  background-position: center;
 }
 
-.container {
-  width: min(980px, 95vw);
+#app {
+  width: min(1100px, 95vw);
   margin: 18px auto;
   display: grid;
   gap: 12px;
@@ -27,11 +32,65 @@ body {
 .card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, .35);
+  backdrop-filter: blur(6px);
 }
 
-.hidden { display: none; }
+.hidden {
+  display: none;
+}
+
+#firebaseStatus {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+#firebaseStatus.ok {
+  color: #95ff95;
+}
+
+#firebaseStatus.warning {
+  color: #ffd993;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.stat-grid div {
+  display: grid;
+  gap: 2px;
+  background: #111;
+  color: #fff;
+  font-family: sans-serif;
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 540px;
+  margin: auto;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.stat-grid span {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.stat-grid b {
+  font-size: 18px;
+}
 
 .status { color: var(--muted); }
 
@@ -90,3 +149,18 @@ body.bg-cover {
   background-size: cover;
   background-position: center;
 }
+
+.panel {
+  border: 1px solid #555;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+#firebaseStatus {
+  padding: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+#firebaseStatus.ok { color: #8dff8d; }
+#firebaseStatus.warning { color: #ffd37d; }
