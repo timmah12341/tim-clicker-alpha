@@ -73,24 +73,7 @@ const SKINS = Array.from({ length: 33 }, (_, i) => {
   };
 });
 
-const SKIN_FILES = ["assets/skins/default.png", "assets/skins/gold.png", "skin_tim.png", "skin_galaxy.png"];
-const SKIN_NAMES = [
-  "Philips stofzuiger D380", "Mr. Timmah", "Kirbtim", "ScoutTim", "Kartonnen doos", "Nyan cat",
-  "Blueprint", "Tima Cola™", "Hologram", "Marble", "Misprint", "Reverse", "Solar", "TIM",
-  "Tim driving in his car", "Joker of Tims", "Spambot Tim", "JOHAN", "Assassin's Tim", "BTS Tim",
-  "Tim Of War", "AMONG US", "G.O.A.T.", "Le Puffervis", "TimTim", "Baby Tim", "SuperTim",
-  "NeutronenTim", "Obama", "rat king tim", "Tim The Plague Serpent", "Blooket Tim", "Terminal Tim"
-];
-
-const SKINS = SKIN_NAMES.map((name, i) => ({
-  id: `skin_${i + 1}`,
-  name,
-  file: SKIN_FILES[i % SKIN_FILES.length],
-  mult: 1 + i * 0.04,
-  cost: i === 0 ? 0 : 550 + i * 450
-}));
-
-const SKIN_FILES = ["assets/skins/default.png", "assets/skins/gold.png", "skin_tim.png", "skin_galaxy.png"];
+const SKIN_FILES = ["assets/skins/default.png", "assets/skins/gold.png", "skin_tim.png", "skin_galaxy.png", "skinblueprint.jpg", "skinpufferfish.jpg"];
 const SKIN_NAMES = [
   "Philips stofzuiger D380", "Mr. Timmah", "Kirbtim", "ScoutTim", "Kartonnen doos", "Nyan cat",
   "Blueprint", "Tima Cola™", "Hologram", "Marble", "Misprint", "Reverse", "Solar", "TIM",
