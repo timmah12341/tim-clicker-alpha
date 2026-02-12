@@ -1,24 +1,29 @@
 :root {
-  --bg: #0b1020;
-  --card: #141c31;
-  --line: #2b3b65;
-  --text: #edf2ff;
-  --muted: #a9b9e8;
-  --accent: #6fa2ff;
+  --bg: #090b1a;
+  --card: rgba(13, 16, 37, 0.85);
+  --line: rgba(153, 170, 255, 0.35);
+  --txt: #f6f8ff;
+  --muted: #a6b2e9;
+  --accent: #7c8cff;
+  --accent-2: #27e4cb;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  color: var(--text);
-  background: radial-gradient(circle at top, #1f2a4e 0%, var(--bg) 60%);
   min-height: 100vh;
+  color: var(--txt);
+  font-family: Inter, Segoe UI, Arial, sans-serif;
+  background: radial-gradient(circle at 20% 20%, #2f2b6b 0%, var(--bg) 42%, #05060f 100%);
+  background-size: cover;
+  background-position: center;
 }
 
-.container {
-  width: min(980px, 95vw);
+#app {
+  width: min(1100px, 95vw);
   margin: 18px auto;
   display: grid;
   gap: 12px;
@@ -27,66 +32,147 @@ body {
 .card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, .35);
+  backdrop-filter: blur(6px);
 }
 
-.hidden { display: none; }
+.hidden {
+  display: none;
+}
 
-.status { color: var(--muted); }
+#firebaseStatus {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.05);
+}
 
-.stats {
+#firebaseStatus.ok {
+  color: #95ff95;
+}
+
+#firebaseStatus.warning {
+  color: #ffd993;
+}
+
+.stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px;
 }
 
-.stats span {
-  display: block;
+.stat-grid div {
+  display: grid;
+  gap: 2px;
+  background: #111;
+  color: #fff;
+  font-family: sans-serif;
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 540px;
+  margin: auto;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.stat-grid span {
   color: var(--muted);
   font-size: 12px;
+  text-transform: uppercase;
 }
 
-.stats b { font-size: 20px; }
+.stat-grid b {
+  font-size: 18px;
+}
 
-.click-area { text-align: center; }
+.hero-card {
+  display: grid;
+  justify-items: center;
+}
 
 #timImage {
-  width: min(230px, 60vw);
+  width: 220px;
+  max-width: 65vw;
+  margin-bottom: 8px;
   cursor: pointer;
-  border-radius: 12px;
-  border: 1px solid var(--line);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, .4);
 }
 
-input, button, select {
+h2, h3 {
+  margin: 0 0 10px;
+}
+
+input,
+button {
   width: 100%;
-  padding: 10px;
-  border-radius: 8px;
   border: 1px solid var(--line);
-  background: #0f1730;
-  color: var(--text);
-  margin: 6px 0;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 15px;
+  color: var(--txt);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 button {
   cursor: pointer;
-  background: linear-gradient(180deg, #3559a7, #264889);
+  background: linear-gradient(135deg, rgba(124, 140, 255, .35), rgba(39, 228, 203, .18));
+  transition: transform .08s ease, border-color .12s ease;
 }
 
-.grid {
+button:hover {
+  border-color: rgba(255, 255, 255, .65);
+}
+
+button:active {
+  transform: scale(.98);
+}
+
+.shop-grid {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
 }
 
-.inline {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
+.shop-item {
+  text-align: left;
 }
 
-body.bg-cover {
-  background-size: cover;
-  background-position: center;
+#miniResult,
+#adminResult {
+  margin-top: 10px;
+  color: var(--accent-2);
+  font-weight: 700;
 }
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+#upgradeShop button,
+#skinShop button,
+#musicShop button,
+#backgroundShop button {
+  text-align: left;
+}
+
+.panel {
+  border: 1px solid #555;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+#firebaseStatus {
+  padding: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+#firebaseStatus.ok { color: #8dff8d; }
+#firebaseStatus.warning { color: #ffd37d; }

@@ -7,80 +7,145 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="container">
-    <section id="namePanel" class="card">
-      <h1>Tim Clicker</h1>
-      <p>Enter your ingame name to start.</p>
-      <input id="nameInput" placeholder="Your name">
-      <button id="saveNameBtn">Start</button>
-      <p id="firebaseStatus" class="status"></p>
+<div id="app">
+  <div id="firebaseStatus"></div>
+
+  <div id="namePanel" class="card">
+    <h2>Welkom bij #Tim-Clicker</h2>
+    <input id="nameInput" placeholder="Wat is je ingame naam?">
+    <button id="saveName">Start</button>
+  </div>
+
+  <div id="game" class="hidden">
+    <header class="card stat-grid">
+      <div><span>Player</span><b id="playerName"></b></div>
+      <div><span>Tims</span><b id="tims">0</b></div>
+      <div><span>CPS</span><b id="cps">0</b></div>
+      <div><span>Rebirths</span><b id="rebirths">0</b></div>
+      <div><span>Event</span><b id="eventLabel">none</b></div>
+      <div><span>Active coin</span><b id="activeCoinLabel">Johan coin</b></div>
+      <div><span>Coin price</span><b id="cryptoPrice">0</b></div>
+      <div><span>Wallet</span><b id="cryptoWallet">0</b></div>
+
+    <header>
+      <div>Player: <b id="playerName"></b></div>
+      <div>Tims: <b id="tims">0</b></div>
+      <div>CPS: <b id="cps">0</b></div>
+      <div>Rebirths: <b id="rebirths">0</b></div>
+      <div>Fake Crypto: <b id="cryptoWallet">0</b> TIMC</div>
+      <div>TIMC price: <b id="cryptoPrice">0</b></div>
+      <div>Event: <b id="eventLabel">none</b></div>
+    </header>
+
+    <section class="card hero-card">
+      <img id="timImage" src="assets/skins/default.png" alt="Tim">
+      <button id="rebirthBtn">REBIRTH</button>
     </section>
 
-    <section id="gamePanel" class="hidden">
-      <header class="card stats">
-        <div><span>Player</span><b id="playerName">-</b></div>
-        <div><span>Tims</span><b id="tims">0</b></div>
-        <div><span>CPS</span><b id="cps">0</b></div>
-        <div><span>Rebirths</span><b id="rebirths">0</b></div>
-        <div><span>Event</span><b id="eventText">None</b></div>
-      </header>
-
-      <section class="card click-area">
-        <img id="timImage" src="assets/skins/default.png" alt="Tim">
-        <button id="rebirthBtn">Rebirth</button>
-      </section>
-
-      <section class="card">
-        <h2>Upgrades</h2>
-        <div id="upgradeShop" class="grid"></div>
-      </section>
-
-      <section class="card">
-        <h2>Skins (33)</h2>
-        <div id="skinShop" class="grid"></div>
-      </section>
-
-      <section class="card">
-        <h2>Music (buyable)</h2>
-        <div id="musicShop" class="grid"></div>
-      </section>
-
-      <section class="card">
-        <h2>Backgrounds (buyable)</h2>
-        <div id="backgroundShop" class="grid"></div>
-      </section>
-
-      <section class="card">
-        <h2>Minigames</h2>
-        <div id="minigameShop" class="grid"></div>
-        <p id="miniResult"></p>
-      </section>
-
-      <section class="card">
-        <h2>Fake Crypto</h2>
-        <div class="inline">
-          <label for="coinSelect">Coin:</label>
-          <select id="coinSelect"></select>
-          <span>Price: <b id="coinPrice">0</b></span>
-          <span>Wallet: <b id="coinWallet">0</b></span>
-        </div>
-        <div class="grid">
-          <button id="buyCoinBtn">Buy 1 coin</button>
-          <button id="sellCoinBtn">Sell 1 coin</button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Admin Events</h2>
-        <input id="adminCodeInput" placeholder="Event code (RAIN/THUNDER/DISCO/CLEAR)">
-        <button id="setEventBtn">Set Event</button>
-      </section>
+    <section class="card">
+      <h3>Upgrades (CPS)</h3>
+      <div id="upgradeShop" class="shop-grid"></div>
+      <h3>Special CPS Upgrades</h3>
+      <div id="cpsUpgradeShop" class="shop-grid"></div>
     </section>
-  </main>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="script.js?v=20260212b"></script>
+    <section class="card">
+      <h3>Skins (33)</h3>
+      <div id="skinShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Music (buyable)</h3>
+      <div id="musicShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Backgrounds (buyable)</h3>
+      <div id="backgroundShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Minigames</h3>
+      <div id="minigameShop" class="shop-grid"></div>
+      <div id="miniResult"></div>
+    </section>
+
+    <section class="card">
+      <h3>Fake Crypto</h3>
+      <div id="cryptoShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Admin Events / Admin Panel</h3>
+      <input id="adminCodeInput" placeholder="Admin code / event code">
+      <button id="activateEventBtn">Activate</button>
+      <div id="adminResult"></div>
+    </section>
+
+    <section class="card">
+      <h3>Music (buyable)</h3>
+      <div id="musicShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Backgrounds (buyable)</h3>
+      <div id="backgroundShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Minigames</h3>
+      <div id="minigameShop" class="shop-grid"></div>
+      <div id="miniResult"></div>
+    </section>
+
+    <section class="card">
+      <h3>Fake Crypto</h3>
+      <div id="cryptoShop" class="shop-grid"></div>
+    </section>
+
+    <section class="card">
+      <h3>Admin Events / Admin Panel</h3>
+      <input id="adminCodeInput" placeholder="Admin code / event code">
+      <button id="activateEventBtn">Activate</button>
+      <div id="adminResult"></div>
+    </section>
+    <h3>Upgrades (CPS)</h3>
+    <div id="upgradeShop"></div>
+
+    <h3>Skins (33)</h3>
+    <div id="skinShop"></div>
+
+    <h3>Music (buyable)</h3>
+    <div id="musicShop"></div>
+
+    <h3>Backgrounds (buyable)</h3>
+    <div id="backgroundShop"></div>
+
+    <h3>Minigames</h3>
+    <div class="panel">
+      <button id="coinFlipBtn">Coin Flip (cost 100, win 220)</button>
+      <button id="guessBtn">Lucky Guess (cost 250, win 750)</button>
+      <div id="miniResult"></div>
+    </div>
+
+    <h3>Fake Crypto</h3>
+    <div class="panel">
+      <button id="buyCryptoBtn">Buy 1 TIMC</button>
+      <button id="sellCryptoBtn">Sell 1 TIMC</button>
+    </div>
+
+    <h3>Admin Events</h3>
+    <div class="panel">
+      <input id="adminCodeInput" placeholder="Admin event code">
+      <button id="activateEventBtn">Activate event</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
