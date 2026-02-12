@@ -59,6 +59,8 @@ const skinFiles = [
   "assets/skins/gold.png",
   "skin_tim.png",
   "skin_galaxy.png"
+  "skinpufferfish.jpg"
+  "skinblueprint.jpg"
 ];
 
 const SKINS = Array.from({ length: 33 }, (_, i) => {
