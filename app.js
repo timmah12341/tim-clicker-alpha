@@ -38,12 +38,28 @@
   };
 
   var SKINS = [];
-  // Every file from assets/skins is included below (duplicated on purpose).
+  // Includes all current skin art files (assets/skins + root legacy skins), duplicated on purpose.
   var skinFiles = [
     'assets/skins/default.png',
     'assets/skins/gold.png',
+    'skin_tim.png',
+    'skin_galaxy.png',
+    'golden.png',
+    'somtoday1.png',
+    'somtoday2.png',
+    'somtoday3.png',
+    'cookie.png',
+    'DAVDD.png',
     'assets/skins/default.png',
-    'assets/skins/gold.png'
+    'assets/skins/gold.png',
+    'skin_tim.png',
+    'skin_galaxy.png',
+    'golden.png',
+    'somtoday1.png',
+    'somtoday2.png',
+    'somtoday3.png',
+    'cookie.png',
+    'DAVDD.png'
   ];
 
   function skinNameFromFile(file) {
