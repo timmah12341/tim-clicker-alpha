@@ -38,17 +38,39 @@
   };
 
   var SKINS = [];
-  var skinNames = [
-    'Default','Gold','Tim','Galaxy','Blueprint','Nyan','Marble','Solar','Johan','Blooket','Terminal','Baby Tim',
-    'SuperTim','Obama','Rat King','ScoutTim','Timmah','KirbTim','Assassin Tim','BTS Tim','AMONG US','GOAT','Le Puffervis',
-    'Tim Of War','Spambot','Joker','Hologram','Reverse','Kartonnen doos','Tima Cola','NeutronenTim','TimTim','Plague Serpent'
+  var skinFiles = [
+    'assets/skins/default.png',
+    'assets/skins/gold.png',
+    'skin_tim.png',
+    'skin_galaxy.png',
+    'golden.png',
+    'somtoday1.png',
+    'somtoday2.png',
+    'somtoday3.png',
+    'cookie.png',
+    'DAVDD.png',
+    'assets/skins/default.png',
+    'assets/skins/gold.png',
+    'skin_tim.png',
+    'skin_galaxy.png',
+    'golden.png',
+    'somtoday1.png',
+    'somtoday2.png',
+    'somtoday3.png',
+    'cookie.png',
+    'DAVDD.png'
   ];
-  var skinFiles = ['assets/skins/default.png','assets/skins/gold.png','skin_tim.png','skin_galaxy.png'];
-  for (var i = 0; i < 33; i++) {
+
+  function skinNameFromFile(file) {
+    var base = file.split('/').pop().replace(/\.png$/i, '');
+    return base.replace(/_/g, ' ');
+  }
+
+  for (var i = 0; i < skinFiles.length; i++) {
     SKINS.push({
       id: 'skin_' + (i + 1),
-      name: skinNames[i],
-      file: skinFiles[i % skinFiles.length],
+      name: skinNameFromFile(skinFiles[i]),
+      file: skinFiles[i],
       mult: 1 + i * 0.03,
       cost: i === 0 ? 0 : 500 + i * 400
     });
