@@ -38,34 +38,17 @@
   };
 
   var SKINS = [];
-  // Auto-includes everything currently in assets/skins + legacy skin files.
-  // If you add new files to assets/skins, add them here as well if needed on older deploys.
+  // Every file from assets/skins is included below (duplicated on purpose).
   var skinFiles = [
     'assets/skins/default.png',
     'assets/skins/gold.png',
-    'skin_tim.png',
-    'skin_galaxy.png',
-    'golden.png',
-    'somtoday1.png',
-    'somtoday2.png',
-    'somtoday3.png',
-    'cookie.png',
-    'DAVDD.png',
     'assets/skins/default.png',
-    'assets/skins/gold.png',
-    'skin_tim.png',
-    'skin_galaxy.png',
-    'golden.png',
-    'somtoday1.png',
-    'somtoday2.png',
-    'somtoday3.png',
-    'cookie.png',
-    'DAVDD.png'
+    'assets/skins/gold.png'
   ];
 
   function skinNameFromFile(file) {
-    var base = file.split('/').pop().replace(/\.png$/i, '');
-    return base.replace(/_/g, ' ');
+    var base = file.split('/').pop().replace(/\.[^.]+$/i, '');
+    return base.replace(/[_-]/g, ' ');
   }
 
   for (var i = 0; i < skinFiles.length; i++) {
