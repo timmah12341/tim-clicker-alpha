@@ -38,6 +38,8 @@
   };
 
   var SKINS = [];
+  // Auto-includes everything currently in assets/skins + legacy skin files.
+  // If you add new files to assets/skins, add them here as well if needed on older deploys.
   var skinFiles = [
     'assets/skins/default.png',
     'assets/skins/gold.png',
@@ -75,7 +77,6 @@
       cost: i === 0 ? 0 : 500 + i * 400
     });
   }
-
   var MUSIC = {
     lofi1: { name: 'Lofi 1', cost: 1200, file: 'assets/music/lofi1.wav' },
     lofi2: { name: 'Lofi 2', cost: 2500, file: 'assets/music/lofi2.wav' }
