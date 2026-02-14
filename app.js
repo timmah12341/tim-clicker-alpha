@@ -80,13 +80,14 @@
     { id: 'u39', name: 'The fabric of space and Tim', baseCost: 5000000000000000000000, add: 10000000000000000000, icon: 'upgrade36.png' },
     { id: 'u40', name: 'Deep Brain stimulation', baseCost: 10000000000000000000000, add: 50000000000000000000, icon: 'upgrade38.png' },
     { id: 'u41', name: '6 laws of quantum physics', baseCost: 50000000000000000000000, add: 100000000000000000000, icon: 'upgrade40.png' },
-    { id: 'u42', name: 'Weapon of Mosquito Destruction', baseCost: 100000000000000000000000, add: 500000000000000000000, icon: 'upgrade41.png' }
+    { id: 'u42', name: 'Weapon of Mosquito Destruction', baseCost: 100000000000000000000000, add: 500000000000000000000, icon: 'upgrade41.png' },
+    { id: 'u43', name: 'P-A', baseCost: 500000000000000000000000, add: 1000000000000000000000, icon: 'assets/upgrades/P-A.png' },
+    { id: 'u44', name: 'G-T', baseCost: 1000000000000000000000000, add: 5000000000000000000000, icon: 'assets/upgrades/G-T.png' }
   ];
   var UPGRADES = upgrades;
 
 
   var SKINS = [];
-  // Known local skin files (assets + legacy root files).
   var skinCandidates = [
     'assets/skins/default.png',
     'assets/skins/Gold.png',
@@ -119,6 +120,17 @@
     'assets/skins/Timton_G_Timton.png'
   ];
 
+  var skinFallbackPool = [
+    'assets/skins/default.png',
+    'assets/skins/gold.png',
+    'skin_tim.png',
+    'skin_galaxy.png',
+    'golden.png',
+    'somtoday1.png',
+    'somtoday2.png',
+    'somtoday3.png'
+  ];
+
   function skinNameFromFile(path) {
     var file = path.split('/').pop() || '';
     var base = file.replace(/\.[^.]+$/, '');
@@ -128,68 +140,77 @@
   }
 
   function loadSkinCatalog(done) {
-    var found = [];
+    var entries = [];
+    var remaining = skinCandidates.length;
+    var completed = false;
 
-    function finalize(list) {
-      var files = list && list.length ? list : ['assets/skins/default.png'];
+    function finalize() {
+      if (completed) return;
+      completed = true;
+      if (entries.length === 0) {
+        entries.push({ idx: 0, name: 'Default', file: 'assets/skins/default.png' });
+      }
+
+      entries.sort(function (a, b) { return a.idx - b.idx; });
+
       SKINS = [];
-      for (var i = 0; i < files.length; i++) {
+      for (var i = 0; i < entries.length; i++) {
         SKINS.push({
           id: 'skin_' + (i + 1),
-          name: skinNameFromFile(files[i]),
-          file: files[i],
+          name: entries[i].name,
+          file: entries[i].file,
           mult: 1 + i * 0.03,
           cost: i === 0 ? 0 : 500 + i * 400
         });
       }
+
       if (state.skinsOwned.indexOf('skin_1') < 0) state.skinsOwned = ['skin_1'];
       if (!SKINS.some(function (x) { return x.id === state.activeSkin; })) state.activeSkin = 'skin_1';
       done();
     }
 
-    function probe(candidates) {
-      var remaining = candidates.length;
-      var completed = false;
-      if (!remaining) return finalize([]);
-      function maybeFinish() {
-        if (!completed && remaining === 0) {
-          completed = true;
-          finalize(found);
-        }
+    function pushEntryIfMissing(entry) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].name === entry.name) return;
       }
-      setTimeout(function () {
-        if (!completed) {
-          completed = true;
-          finalize(found);
-        }
-      }, 1800);
-
-      for (var i = 0; i < candidates.length; i++) {
-        (function (file) {
-          var img = new Image();
-          img.onload = function () {
-            if (found.indexOf(file) < 0) found.push(file);
-            remaining -= 1;
-            maybeFinish();
-          };
-          img.onerror = function () {
-            remaining -= 1;
-            maybeFinish();
-          };
-          img.src = file;
-        })(candidates[i]);
-      }
+      entries.push(entry);
     }
 
-    fetch('assets/skins/skins.json', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : []; })
-      .then(function (list) {
-        if (Array.isArray(list) && list.length) probe(list);
-        else probe(skinCandidates);
-      })
-      .catch(function () {
-        probe(skinCandidates);
-      });
+    function resolveCandidate(candidate, idx) {
+      var displayName = skinNameFromFile(candidate);
+      var img = new Image();
+      img.onload = function () {
+        pushEntryIfMissing({ idx: idx, name: displayName, file: candidate });
+        remaining -= 1;
+        if (remaining === 0) finalize();
+      };
+      img.onerror = function () {
+        var fallback = skinFallbackPool[idx % skinFallbackPool.length];
+        var fallbackImg = new Image();
+        fallbackImg.onload = function () {
+          pushEntryIfMissing({ idx: idx, name: displayName, file: fallback });
+          remaining -= 1;
+          if (remaining === 0) finalize();
+        };
+        fallbackImg.onerror = function () {
+          remaining -= 1;
+          if (remaining === 0) finalize();
+        };
+        fallbackImg.src = fallback;
+      };
+      img.src = candidate;
+    }
+
+    if (!remaining) {
+      finalize();
+      return;
+    }
+
+    for (var i = 0; i < skinCandidates.length; i++) {
+      resolveCandidate(skinCandidates[i], i);
+    }
+
+    setTimeout(finalize, 2200);
   }
   var MUSIC = {
     lofi1: { name: 'Lofi 1', cost: 1200, file: 'assets/music/lofi1.wav' },
@@ -345,7 +366,7 @@
         var price = upgradeCost(up.baseCost, owned);
         var btn = document.createElement('button');
         btn.className = 'upgrade-item';
-        btn.innerHTML = '<img src="' + up.icon + '" alt="" onerror="this.style.display=\'none\'">' +
+        btn.innerHTML = '<img src="' + up.icon + '" alt="" data-icon="' + up.icon.replace('assets/upgrades/', '') + '" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=\'assets/upgrades/\'+this.dataset.icon;}else{this.style.display=\'none\';}">' +
           '<span>' + up.name + ' (' + owned + ') - ' + price + '</span>';
         btn.onclick = function () {
           if (state.tims < price) return;
@@ -366,7 +387,9 @@
       (function (skin) {
         var owned = state.skinsOwned.indexOf(skin.id) >= 0;
         var btn = document.createElement('button');
-        btn.textContent = skin.name + (owned ? ' (owned)' : ' - ' + skin.cost);
+        btn.className = 'skin-item';
+        btn.innerHTML = '<img src="' + skin.file + '" alt="" onerror="this.style.display=\'none\'">' +
+          '<span>' + skin.name + (owned ? ' (owned)' : ' - ' + skin.cost) + '</span>';
         btn.onclick = function () {
           if (!owned) {
             if (state.tims < skin.cost) return;

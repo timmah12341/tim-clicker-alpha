@@ -37,6 +37,8 @@ body {
 
 .status { color: var(--muted); }
 
+.status { color: var(--muted); }
+
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -90,7 +92,17 @@ button {
 
 body.bg-cover {
   background-size: cover;
-  background-position: center;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+@media (max-width: 767px) {
+  body.bg-cover {
+    background-size: 100% auto;
+    background-position: top center;
+    background-attachment: scroll;
+  }
 }
 
 
@@ -164,3 +176,31 @@ button.danger {
 .cookie-popup.hidden { display: none !important; }
 
 body.cookie-lock { overflow: hidden; }
+
+
+.skin-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.skin-item img {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.06);
+}
+
+
+.credits-contrib {
+  width: min(780px, 100%);
+  display: block;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.03);
+}
+
+.card a { color: #9dc0ff; }
