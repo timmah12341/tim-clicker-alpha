@@ -107,7 +107,7 @@
 
   var skinNames = [
     'Default',
-    'Gold',
+    'Timtoday :3',
     'Blueprint Tim',
     'Hologram Tim',
     'Kartonnen Doos',
