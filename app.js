@@ -92,7 +92,7 @@
     'assets/skins/default.png',
     'assets/skins/Gold.png',
     'assets/skins/AMONG_US.png',
-    'assets/skins/Assasin_Tim',
+    'assets/skins/Assasin_Tim.png',
     'assets/skins/B.T.S._Tim.png',
     'assets/skins/Baby_Tim.png',
     'assets/skins/Blooket_Tim.png',
