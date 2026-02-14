@@ -31,7 +31,11 @@ body {
   padding: 12px;
 }
 
-.hidden { display: none; }
+.status { color: var(--muted); }
+
+.status { color: var(--muted); }
+
+.status { color: var(--muted); }
 
 .status { color: var(--muted); }
 
