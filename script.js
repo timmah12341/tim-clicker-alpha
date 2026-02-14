@@ -56,15 +56,27 @@
     'assets/skins/TimtonGTimton.png'
   ];
 
-  function skinNameFromFile(file) {
-    var base = file.split('/').pop().replace(/\.[^.]+$/i, '');
-    return base.replace(/[_-]/g, ' ');
-  }
+  var skinNames = [
+    'Default',
+    'Gold',
+    'Blueprint Tim',
+    'Hologram Tim',
+    'Kartonnen Doos',
+    'Tim The Plague Serpent',
+    'Le Pufferfish Tim',
+    'Scout Tim',
+    'Joker of Tims',
+    'Tim Of War',
+    'TimTim',
+    'Tima Cola™',
+    'TimoBama',
+    'Timton G Timton'
+  ];
 
   for (var i = 0; i < skinFiles.length; i++) {
     SKINS.push({
       id: 'skin_' + (i + 1),
-      name: skinNameFromFile(skinFiles[i]),
+      name: skinNames[i] || ('Skin ' + (i + 1)),
       file: skinFiles[i],
       mult: 1 + i * 0.03,
       cost: i === 0 ? 0 : 500 + i * 400
