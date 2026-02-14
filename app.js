@@ -514,6 +514,7 @@
 
   function boot() {
     applyBackground();
+    document.body.classList.add('cookie-lock');
 
     function openIfNamed() {
       if (!state.name) return;
@@ -525,6 +526,7 @@
     el('acceptCookiesBtn').onclick = function () {
       saveAllowed = true;
       el('cookiePopup').classList.add('hidden');
+      document.body.classList.remove('cookie-lock');
       loadLocal();
       initFirebaseAuth().then(function () {
         openIfNamed();
@@ -536,6 +538,7 @@
       saveAllowed = false;
       uid = null;
       el('cookiePopup').classList.add('hidden');
+      document.body.classList.remove('cookie-lock');
       setStatus('Saving declined. Nothing will be saved (risk accepted).');
       openIfNamed();
       renderAll();
