@@ -11,6 +11,10 @@
     "globalEvents": {
       ".read": true,
       ".write": "auth.token.email == 'timfinke01@gmail.com'"
+    },
+    "publicSessions": {
+      ".read": true,
+      ".write": true
     }
   }
 }
