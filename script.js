@@ -86,49 +86,78 @@
 
 
   var SKINS = [];
-  // Includes all current skin art files (assets/skins + root legacy skins), duplicated on purpose.
-  var skinFiles = [
+  // Broad skin candidate set; runtime keeps only files that successfully load.
+  var skinCandidates = [
     'assets/skins/default.png',
     'assets/skins/gold.png',
     'assets/skins/Blueprint_Tim.png',
-    'assets/skins/HologramTim.png',
-    'assets/skins/KartonnenDoos.png',
-    'assets/skins/Plague_Serpent.png',
-    'assets/skins/PufferfishTim.png',
-    'assets/skins/ScoutTim.png',
-    'assets/skins/TimJoker.png',
-    'assets/skins/TimOfWar.png',
+    'assets/skins/Hologram_Tim.png',
+    'assets/skins/Kartonnen_Doos.png',
+    'assets/skins/Tim_The_Plague_Serpent.png',
+    'assets/skins/Le_Pufferfish_Tim.png',
+    'assets/skins/Scout_Tim.png',
+    'assets/skins/Joker_of_Tims.png',
+    'assets/skins/Tim_Of_War.png',
     'assets/skins/TimTim.png',
-    'assets/skins/TimaCola.png',
+    'assets/skins/Tima_Cola.png',
     'assets/skins/TimoBama.png',
-    'assets/skins/TimtonGTimton.png'
+    'assets/skins/Timton_G_Timton.png',
+    'assets/skins/Blueprint Tim.png',
+    'assets/skins/Hologram Tim.png',
+    'assets/skins/Kartonnen Doos.png',
+    'assets/skins/Tim The Plague Serpent.png',
+    'assets/skins/Le Pufferfish Tim.png',
+    'assets/skins/Scout Tim.png',
+    'assets/skins/Joker of Tims.png',
+    'assets/skins/Tim Of War.png',
+    'assets/skins/Tima Cola.png',
+    'assets/skins/Timton G Timton.png'
   ];
 
-  var skinNames = [
-    'Default',
-    'Gold',
-    'Blueprint Tim',
-    'Hologram Tim',
-    'Kartonnen Doos',
-    'Tim The Plague Serpent',
-    'Le Pufferfish Tim',
-    'Scout Tim',
-    'Joker of Tims',
-    'Tim Of War',
-    'TimTim',
-    'Tima Cola™',
-    'TimoBama',
-    'Timton G Timton'
-  ];
+  function skinNameFromFile(path) {
+    var file = path.split('/').pop() || '';
+    var base = file.replace(/\.[^.]+$/, '');
+    base = base.replace(/[_-]+/g, ' ').trim();
+    if (!base) return 'Skin';
+    return base.replace(/\b\w/g, function (m) { return m.toUpperCase(); });
+  }
 
-  for (var i = 0; i < skinFiles.length; i++) {
-    SKINS.push({
-      id: 'skin_' + (i + 1),
-      name: skinNames[i] || ('Skin ' + (i + 1)),
-      file: skinFiles[i],
-      mult: 1 + i * 0.03,
-      cost: i === 0 ? 0 : 500 + i * 400
-    });
+  function loadSkinCatalog(done) {
+    var found = [];
+    var remaining = skinCandidates.length;
+
+    function finish() {
+      if (found.length === 0) found = ['assets/skins/default.png'];
+      SKINS = [];
+      for (var i = 0; i < found.length; i++) {
+        SKINS.push({
+          id: 'skin_' + (i + 1),
+          name: skinNameFromFile(found[i]),
+          file: found[i],
+          mult: 1 + i * 0.03,
+          cost: i === 0 ? 0 : 500 + i * 400
+        });
+      }
+      if (state.skinsOwned.indexOf('skin_1') < 0) state.skinsOwned = ['skin_1'];
+      if (!SKINS.some(function (x) { return x.id === state.activeSkin; })) state.activeSkin = 'skin_1';
+      done();
+    }
+
+    for (var i = 0; i < skinCandidates.length; i++) {
+      (function (file) {
+        var img = new Image();
+        img.onload = function () {
+          if (found.indexOf(file) < 0) found.push(file);
+          remaining -= 1;
+          if (remaining === 0) finish();
+        };
+        img.onerror = function () {
+          remaining -= 1;
+          if (remaining === 0) finish();
+        };
+        img.src = file;
+      })(skinCandidates[i]);
+    }
   }
   var MUSIC = {
     lofi1: { name: 'Lofi 1', cost: 1200, file: 'assets/music/lofi1.wav' },
@@ -547,5 +576,7 @@
     setStatus('Please accept or decline saving cookies.');
   }
 
-  boot();
+  loadSkinCatalog(function () {
+    boot();
+  });
 })();

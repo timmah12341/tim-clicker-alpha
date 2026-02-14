@@ -31,12 +31,7 @@ body {
   padding: 12px;
 }
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px;
-}
+.status { color: var(--muted); }
 
 .status { color: var(--muted); }
 
