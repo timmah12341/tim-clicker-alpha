@@ -31,11 +31,7 @@ body {
   padding: 12px;
 }
 
-.stat-grid span {
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-}
+.status { color: var(--muted); }
 
 .status { color: var(--muted); }
 
@@ -95,5 +91,70 @@ body.bg-cover {
   background-position: center;
 }
 
-#firebaseStatus.ok { color: #8dff8d; }
-#firebaseStatus.warning { color: #ffd37d; }
+
+/* Compact shop and upgrade visuals */
+.grid {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.grid button,
+.upgrade-item {
+  padding: 6px 8px;
+  font-size: 13px;
+  margin: 3px 0;
+  min-height: 42px;
+}
+
+#upgradeShop {
+  max-height: 340px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.upgrade-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.upgrade-item img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.06);
+}
+
+/* Cookie consent popup */
+.cookie-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.cookie-card {
+  width: min(560px, 95vw);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.cookie-card h3 { margin-top: 0; }
+.cookie-card p { margin: 8px 0; color: var(--muted); }
+
+.cookie-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+button.danger {
+  background: linear-gradient(180deg, #8a2d2d, #6a2020);
+}

@@ -15,8 +15,7 @@
   var auth = null;
   var db = null;
   var uid = null;
-  var sessionKey = 'session_' + Math.random().toString(36).slice(2, 10);
-  var lastPublicSaveAt = 0;
+  var saveAllowed = false;
 
   try {
     if (window.firebase && !firebase.apps.length) {
@@ -77,7 +76,7 @@
     { id: 'u35', name: 'Lobotomy', baseCost: 50000000000000000000, add: 100000000000000000, icon: 'upgrade37.png' },
     { id: 'u36', name: 'Dafthusky', baseCost: 100000000000000000000, add: 500000000000000000, icon: 'upgrade39.png' },
     { id: 'u37', name: 'Quasar', baseCost: 500000000000000000000, add: 1000000000000000000, icon: 'upgrade35.png' },
-    { id: 'u38', name: 'Who is the inventor of cheese???', baseCost: 1000000000000000000000, add: 5000000000000000000, icon: 'upgrad.png' },
+    { id: 'u38', name: 'Who is the inventor of cheese???', baseCost: 1000000000000000000000, add: 5000000000000000000, icon: 'upgrade38.png' },
     { id: 'u39', name: 'The fabric of space and Tim', baseCost: 5000000000000000000000, add: 10000000000000000000, icon: 'upgrade36.png' },
     { id: 'u40', name: 'Deep Brain stimulation', baseCost: 10000000000000000000000, add: 50000000000000000000, icon: 'upgrade38.png' },
     { id: 'u41', name: '6 laws of quantum physics', baseCost: 50000000000000000000000, add: 100000000000000000000, icon: 'upgrade40.png' },
@@ -211,12 +210,14 @@
   }
 
   function saveLocal() {
+    if (!saveAllowed) return;
     try {
       localStorage.setItem('tim_clicker_save_v2', JSON.stringify(state));
     } catch (err) {}
   }
 
   function loadLocal() {
+    if (!saveAllowed) return;
     try {
       var raw = localStorage.getItem('tim_clicker_save_v2');
       if (raw) state = Object.assign(clone(defaultState), JSON.parse(raw));
@@ -226,37 +227,16 @@
   }
 
   function saveRemote() {
+    if (!saveAllowed) return;
     if (!firebaseReady || !uid || !db) return;
-    db.ref('users/' + uid).set(state).catch(function (err) {
-      setStatus('Firebase write failed, using local/public save.');
+    db.ref('users/' + uid).set(state).catch(function () {
+      setStatus('Firebase write failed.');
     });
-  }
-
-  function savePublic() {
-    var now = Date.now();
-    if (now - lastPublicSaveAt < 5000) return;
-    lastPublicSaveAt = now;
-
-    var payload = {
-      name: state.name || 'unknown',
-      tims: Math.floor(state.tims),
-      rebirths: state.rebirths || 0,
-      updatedAt: now
-    };
-
-    try {
-      fetch(firebaseConfig.databaseURL + '/publicSessions/' + sessionKey + '.json', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(function () {});
-    } catch (err) {}
   }
 
   function saveNow() {
     saveLocal();
     saveRemote();
-    savePublic();
   }
 
   function setStatus(text) {
@@ -295,7 +275,9 @@
         var owned = state.upgrades[up.id] || 0;
         var price = upgradeCost(up.baseCost, owned);
         var btn = document.createElement('button');
-        btn.textContent = up.name + ' (' + owned + ') - ' + price + ' [' + up.icon + ']';
+        btn.className = 'upgrade-item';
+        btn.innerHTML = '<img src="' + up.icon + '" alt="" onerror="this.style.display=\'none\'">' +
+          '<span>' + up.name + ' (' + owned + ') - ' + price + '</span>';
         btn.onclick = function () {
           if (state.tims < price) return;
           state.tims -= price;
@@ -504,9 +486,33 @@
   }, 100);
 
   // ---------- Boot ----------
+  function initFirebaseAuth() {
+    if (!saveAllowed) {
+      setStatus('Saving declined. Nothing will be saved.');
+      return Promise.resolve();
+    }
+
+    if (!firebaseReady || !auth || !db) {
+      setStatus('Firebase offline, local save enabled.');
+      return Promise.resolve();
+    }
+
+    return auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
+      .then(function () { return auth.signInAnonymously(); })
+      .then(function (res) {
+        uid = res.user.uid;
+        setStatus('Firebase connected.');
+        return db.ref('users/' + uid).once('value');
+      })
+      .then(function (snap) {
+        if (snap && snap.exists()) state = Object.assign(clone(defaultState), snap.val());
+      })
+      .catch(function () {
+        setStatus('Firebase auth blocked. Playing without cloud save.');
+      });
+  }
+
   function boot() {
-    setStatus(firebaseReady ? 'Firebase connected.' : 'Firebase offline, local save enabled.');
-    loadLocal();
     applyBackground();
 
     function openIfNamed() {
@@ -516,22 +522,26 @@
       renderAll();
     }
 
-    if (!firebaseReady || !auth || !db) {
-      openIfNamed();
-      return;
-    }
+    el('acceptCookiesBtn').onclick = function () {
+      saveAllowed = true;
+      el('cookiePopup').classList.add('hidden');
+      loadLocal();
+      initFirebaseAuth().then(function () {
+        openIfNamed();
+        renderAll();
+      });
+    };
 
-    auth.signInAnonymously().then(function (res) {
-      uid = res.user.uid;
-      return db.ref('users/' + uid).once('value');
-    }).then(function (snap) {
-      if (snap.exists()) state = Object.assign(clone(defaultState), snap.val());
-      applyBackground();
+    el('declineCookiesBtn').onclick = function () {
+      saveAllowed = false;
+      uid = null;
+      el('cookiePopup').classList.add('hidden');
+      setStatus('Saving declined. Nothing will be saved (risk accepted).');
       openIfNamed();
-    }).catch(function () {
-      setStatus('Firebase auth blocked, using local/public save.');
-      openIfNamed();
-    });
+      renderAll();
+    };
+
+    setStatus('Please accept or decline saving cookies.');
   }
 
   boot();
