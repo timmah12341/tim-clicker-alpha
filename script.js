@@ -102,7 +102,8 @@
     'assets/skins/TimTim.png',
     'assets/skins/TimaCola.png',
     'assets/skins/TimoBama.png',
-    'assets/skins/TimtonGTimton.png'
+    'assets/skins/TimtonGTimton.png',
+    'assets/skins/Gold.png'
   ];
 
   var skinNames = [
@@ -120,6 +121,7 @@
     'Tima Cola™',
     'TimoBama',
     'Timton G Timton'
+    'Goud'
   ];
 
   for (var i = 0; i < skinFiles.length; i++) {
