@@ -42,24 +42,18 @@
   var skinFiles = [
     'assets/skins/default.png',
     'assets/skins/gold.png',
-    'skin_tim.png',
-    'skin_galaxy.png',
-    'golden.png',
-    'somtoday1.png',
-    'somtoday2.png',
-    'somtoday3.png',
-    'cookie.png',
-    'DAVDD.png',
-    'assets/skins/default.png',
-    'assets/skins/gold.png',
-    'skin_tim.png',
-    'skin_galaxy.png',
-    'golden.png',
-    'somtoday1.png',
-    'somtoday2.png',
-    'somtoday3.png',
-    'cookie.png',
-    'DAVDD.png'
+    'assets/skins/Blueprint_Tim.png',
+    'assets/skins/HologramTim.png',
+    'assets/skins/KartonnenDoos.png',
+    'assets/skins/Plague_Serpent.png',
+    'assets/skins/PufferfishTim.png',
+    'assets/skins/ScoutTim.png',
+    'assets/skins/TimJoker.png',
+    'assets/skins/TimOfWar.png',
+    'assets/skins/TimTim.png',
+    'assets/skins/TimaCola.png',
+    'assets/skins/TimoBama.png',
+    'assets/skins/TimtonGTimton.png'
   ];
 
   function skinNameFromFile(file) {
