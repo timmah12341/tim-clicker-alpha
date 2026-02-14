@@ -86,32 +86,37 @@
 
 
   var SKINS = [];
-  // Broad skin candidate set; runtime keeps only files that successfully load.
+  // Known local skin files (assets + legacy root files).
   var skinCandidates = [
     'assets/skins/default.png',
-    'assets/skins/gold.png',
+    'assets/skins/Gold.png',
+    'assets/skins/AMONG_US.png',
+    'assets/skins/Assasin_Tim',
+    'assets/skins/B.T.S._Tim.png',
+    'assets/skins/Baby_Tim.png',
+    'assets/skins/Blooket_Tim.png',
     'assets/skins/Blueprint_Tim.png',
     'assets/skins/Hologram_Tim.png',
+    'assets/skins/Joker_Of_Tims.png',
     'assets/skins/Kartonnen_Doos.png',
-    'assets/skins/Tim_The_Plague_Serpent.png',
-    'assets/skins/Le_Pufferfish_Tim.png',
+    'assets/skins/Marble_Tim.png',
+    'assets/skins/Mr._Timmah.png',
+    'assets/skins/Neutronen_Tim.png',
+    'assets/skins/Nyan_Tim.png',
+    'assets/skins/Plague_Serpent.png',
+    'assets/skins/Planet_Tim.gif',
+    'assets/skins/Pufferfish_Tim.png',
     'assets/skins/Scout_Tim.png',
-    'assets/skins/Joker_of_Tims.png',
-    'assets/skins/Tim_Of_War.png',
+    'assets/skins/Solar_Tim.png',
+    'assets/skins/TIM.png',
+    'assets/skins/Terminal_Tim.png',
     'assets/skins/TimTim.png',
-    'assets/skins/Tima_Cola.png',
+    'assets/skins/Tim_Missprinttttttttt.png',
+    'assets/skins/Tim_Of_War.png',
+    'assets/skins/TimaCola.png',
     'assets/skins/TimoBama.png',
-    'assets/skins/Timton_G_Timton.png',
-    'assets/skins/Blueprint Tim.png',
-    'assets/skins/Hologram Tim.png',
-    'assets/skins/Kartonnen Doos.png',
-    'assets/skins/Tim The Plague Serpent.png',
-    'assets/skins/Le Pufferfish Tim.png',
-    'assets/skins/Scout Tim.png',
-    'assets/skins/Joker of Tims.png',
-    'assets/skins/Tim Of War.png',
-    'assets/skins/Tima Cola.png',
-    'assets/skins/Timton G Timton.png'
+    'assets/skins/Timtoday.png',
+    'assets/skins/Timton_G_Timton.png'
   ];
 
   function skinNameFromFile(path) {
@@ -124,16 +129,15 @@
 
   function loadSkinCatalog(done) {
     var found = [];
-    var remaining = skinCandidates.length;
 
-    function finish() {
-      if (found.length === 0) found = ['assets/skins/default.png'];
+    function finalize(list) {
+      var files = list && list.length ? list : ['assets/skins/default.png'];
       SKINS = [];
-      for (var i = 0; i < found.length; i++) {
+      for (var i = 0; i < files.length; i++) {
         SKINS.push({
           id: 'skin_' + (i + 1),
-          name: skinNameFromFile(found[i]),
-          file: found[i],
+          name: skinNameFromFile(files[i]),
+          file: files[i],
           mult: 1 + i * 0.03,
           cost: i === 0 ? 0 : 500 + i * 400
         });
@@ -143,21 +147,49 @@
       done();
     }
 
-    for (var i = 0; i < skinCandidates.length; i++) {
-      (function (file) {
-        var img = new Image();
-        img.onload = function () {
-          if (found.indexOf(file) < 0) found.push(file);
-          remaining -= 1;
-          if (remaining === 0) finish();
-        };
-        img.onerror = function () {
-          remaining -= 1;
-          if (remaining === 0) finish();
-        };
-        img.src = file;
-      })(skinCandidates[i]);
+    function probe(candidates) {
+      var remaining = candidates.length;
+      var completed = false;
+      if (!remaining) return finalize([]);
+      function maybeFinish() {
+        if (!completed && remaining === 0) {
+          completed = true;
+          finalize(found);
+        }
+      }
+      setTimeout(function () {
+        if (!completed) {
+          completed = true;
+          finalize(found);
+        }
+      }, 1800);
+
+      for (var i = 0; i < candidates.length; i++) {
+        (function (file) {
+          var img = new Image();
+          img.onload = function () {
+            if (found.indexOf(file) < 0) found.push(file);
+            remaining -= 1;
+            maybeFinish();
+          };
+          img.onerror = function () {
+            remaining -= 1;
+            maybeFinish();
+          };
+          img.src = file;
+        })(candidates[i]);
+      }
     }
+
+    fetch('assets/skins/skins.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        if (Array.isArray(list) && list.length) probe(list);
+        else probe(skinCandidates);
+      })
+      .catch(function () {
+        probe(skinCandidates);
+      });
   }
   var MUSIC = {
     lofi1: { name: 'Lofi 1', cost: 1200, file: 'assets/music/lofi1.wav' },
@@ -255,20 +287,28 @@
     }
   }
 
-  function saveRemote() {
+  var lastStatus = '';
+  var lastRemoteSaveAt = 0;
+
+  function saveRemote(force) {
     if (!saveAllowed) return;
     if (!firebaseReady || !uid || !db) return;
+    var now = Date.now();
+    if (!force && now - lastRemoteSaveAt < 4000) return;
+    lastRemoteSaveAt = now;
     db.ref('users/' + uid).set(state).catch(function () {
       setStatus('Firebase write failed.');
     });
   }
 
-  function saveNow() {
+  function saveNow(forceRemote) {
     saveLocal();
-    saveRemote();
+    saveRemote(!!forceRemote);
   }
 
   function setStatus(text) {
+    if (text === lastStatus) return;
+    lastStatus = text;
     el('firebaseStatus').textContent = text;
   }
 
@@ -311,7 +351,7 @@
           if (state.tims < price) return;
           state.tims -= price;
           state.upgrades[up.id] = owned + 1;
-          saveNow();
+          saveNow(true);
           renderAll();
         };
         box.appendChild(btn);
@@ -334,7 +374,7 @@
             state.skinsOwned.push(skin.id);
           }
           state.activeSkin = skin.id;
-          saveNow();
+          saveNow(true);
           renderAll();
         };
         box.appendChild(btn);
@@ -364,7 +404,7 @@
           musicPlayer = new Audio(m.file);
           musicPlayer.loop = true;
           musicPlayer.play().catch(function () {});
-          saveNow();
+          saveNow(true);
           renderAll();
         };
         box.appendChild(btn);
@@ -389,7 +429,7 @@
           }
           state.activeBg = bgId;
           applyBackground();
-          saveNow();
+          saveNow(true);
           renderAll();
         };
         box.appendChild(btn);
@@ -411,7 +451,7 @@
           var win = Math.random() < game.winChance;
           if (win) state.tims += game.reward;
           el('miniResult').textContent = win ? ('WIN +' + game.reward) : 'LOSE';
-          saveNow();
+          saveNow(true);
           renderAll();
         };
         box.appendChild(btn);
@@ -442,7 +482,7 @@
       if (state.tims < price) return;
       state.tims -= price;
       state.coinWallet[coin] += 1;
-      saveNow();
+      saveNow(true);
       renderAll();
     };
 
@@ -451,7 +491,7 @@
       if (state.coinWallet[coin] < 1) return;
       state.coinWallet[coin] -= 1;
       state.tims += state.coinPrice[coin];
-      saveNow();
+      saveNow(true);
       renderAll();
     };
   }
@@ -510,7 +550,7 @@
       var swing = (Math.random() - 0.5) * COINS[id].vol;
       state.coinPrice[id] = Math.max(15, state.coinPrice[id] + swing);
     }
-    saveNow();
+    saveNow(false);
     updateStats();
   }, 100);
 
