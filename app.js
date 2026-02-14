@@ -15,6 +15,8 @@
   var auth = null;
   var db = null;
   var uid = null;
+  var sessionKey = 'session_' + Math.random().toString(36).slice(2, 10);
+  var lastPublicSaveAt = 0;
 
   try {
     if (window.firebase && !firebase.apps.length) {
@@ -177,12 +179,36 @@
 
   function saveRemote() {
     if (!firebaseReady || !uid || !db) return;
-    db.ref('users/' + uid).set(state).catch(function () {});
+    db.ref('users/' + uid).set(state).catch(function (err) {
+      setStatus('Firebase write failed, using local/public save.');
+    });
+  }
+
+  function savePublic() {
+    var now = Date.now();
+    if (now - lastPublicSaveAt < 5000) return;
+    lastPublicSaveAt = now;
+
+    var payload = {
+      name: state.name || 'unknown',
+      tims: Math.floor(state.tims),
+      rebirths: state.rebirths || 0,
+      updatedAt: now
+    };
+
+    try {
+      fetch(firebaseConfig.databaseURL + '/publicSessions/' + sessionKey + '.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(function () {});
+    } catch (err) {}
   }
 
   function saveNow() {
     saveLocal();
     saveRemote();
+    savePublic();
   }
 
   function setStatus(text) {
@@ -455,6 +481,7 @@
       applyBackground();
       openIfNamed();
     }).catch(function () {
+      setStatus('Firebase auth blocked, using local/public save.');
       openIfNamed();
     });
   }
