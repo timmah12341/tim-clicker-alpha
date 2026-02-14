@@ -89,13 +89,34 @@
   // Known local skin files (assets + legacy root files).
   var skinCandidates = [
     'assets/skins/default.png',
-    'assets/skins/gold.png',
-    'skin_tim.png',
-    'skin_galaxy.png',
-    'golden.png',
-    'somtoday1.png',
-    'somtoday2.png',
-    'somtoday3.png'
+    'assets/skins/Gold.png',
+    'assets/skins/AMONG_US.png',
+    'assets/skins/Assasin_Tim',
+    'assets/skins/B.T.S._Tim.png',
+    'assets/skins/Baby_Tim.png',
+    'assets/skins/Blooket_Tim.png',
+    'assets/skins/Blueprint_Tim.png',
+    'assets/skins/Hologram_Tim.png',
+    'assets/skins/Joker_Of_Tims.png',
+    'assets/skins/Kartonnen_Doos.png',
+    'assets/skins/Marble_Tim.png',
+    'assets/skins/Mr._Timmah.png',
+    'assets/skins/Neutronen_Tim.png',
+    'assets/skins/Nyan_Tim.png',
+    'assets/skins/Plague_Serpent.png',
+    'assets/skins/Planet_Tim.gif',
+    'assets/skins/Pufferfish_Tim.png',
+    'assets/skins/Scout_Tim.png',
+    'assets/skins/Solar_Tim.png',
+    'assets/skins/TIM.png',
+    'assets/skins/Terminal_Tim.png',
+    'assets/skins/TimTim.png',
+    'assets/skins/Tim_Missprinttttttttt.png',
+    'assets/skins/Tim_Of_War.png',
+    'assets/skins/TimaCola.png',
+    'assets/skins/TimoBama.png',
+    'assets/skins/Timtoday.png',
+    'assets/skins/Timton_G_Timton.png'
   ];
 
   function skinNameFromFile(path) {
