@@ -31,7 +31,11 @@ body {
   padding: 12px;
 }
 
-.hidden { display: none; }
+.stat-grid span {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
 
 .status { color: var(--muted); }
 
@@ -90,3 +94,6 @@ body.bg-cover {
   background-size: cover;
   background-position: center;
 }
+
+#firebaseStatus.ok { color: #8dff8d; }
+#firebaseStatus.warning { color: #ffd37d; }
