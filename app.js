@@ -542,7 +542,7 @@
   };
 
   el('rebirthBtn').onclick = function () {
-    var needed = 1000000 * Math.pow(3, state.rebirths);
+    var needed = 1
     if (state.tims < needed) return;
     state.tims = 0;
     state.upgrades = {};
