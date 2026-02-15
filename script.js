@@ -211,8 +211,8 @@
     setTimeout(finalize, 2200);
   }
   var MUSIC = {
-    lofi1: { name: 'Lofi 1', cost: 1200, file: 'assets/music/lofi1.wav' },
-    lofi2: { name: 'Lofi 2', cost: 2500, file: 'assets/music/lofi2.mp3' }
+    lofi1: { name: 'Bossa Nova', cost: 1200, file: 'assets/music/lofi1.wav' },
+    lofi2: { name: 'Tetration (BFDI/TPOT medley)', cost: 2500, file: 'assets/music/lofi2.mp3' }
   };
 
   var BACKGROUNDS = {
