@@ -1,6 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  getDatabase, ref, get, set, update 
+import {
+  getDatabase,
+  ref,
+  get,
+  set,
+  update
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import {
   getAuth,
@@ -19,30 +23,26 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 export const db = getDatabase(app);
 const auth = getAuth(app);
 
 export let currentUID = null;
 
-signInAnonymously(auth);
+export function initAuth(callback) {
+  signInAnonymously(auth);
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
     currentUID = user.uid;
-    console.log("Signed in:", currentUID);
-  }
-});
-
-export async function loadPlayer(uid) {
-  const snap = await get(ref(db, "players/" + uid));
-  return snap.exists() ? snap.val() : null;
+    callback(user.uid);
+  });
 }
 
-export async function savePlayer(uid, data) {
-  await set(ref(db, "players/" + uid), data);
+export async function loadUser(uid) {
+  const snapshot = await get(ref(db, "users/" + uid));
+  return snapshot.exists() ? snapshot.val() : null;
 }
 
-export async function updatePlayer(uid, data) {
-  await update(ref(db, "players/" + uid), data);
+export async function saveUser(uid, data) {
+  await set(ref(db, "users/" + uid), data);
 }
