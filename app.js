@@ -529,7 +529,7 @@
 
   // ---------- Events ----------
   el('timImage').onclick = function () {
-    state.tims += (1 + state.rebirths * 100000000000000000000000000000000000);
+    state.tims += (1 + state.rebirths * 0.25);
     saveNow();
     renderAll();
   };
@@ -539,17 +539,17 @@
     if (state.tims < needed) return;
     state.tims = 0;
     state.upgrades = {};
-    state.rebirths += 999999999999999999999999999999999999999999999999999999999999999999999999999999;
+    state.rebirths += 1;
     saveNow();
     renderAll();
   };
 
-  el('setEventBtn').onclick = function () {
-    var code = el('adminCodeInput').value.trim().toUpperCase();
-    if (code === 'CLEAR') code = 'NONE';
-    if (!EVENTS[code]) return;
-    state.activeEvent = code;
-    el('adminCodeInput').value = '';
+  el('rebirthBtn').onclick = function () {
+    var needed = 1000000 * Math.pow(3, state.rebirths);
+    if (state.tims < needed) return;
+    state.tims = 0;
+    state.upgrades = {};
+    state.rebirths += 1;
     saveNow();
     renderAll();
   };
