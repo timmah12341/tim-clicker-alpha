@@ -539,7 +539,7 @@
     if (state.tims < needed) return;
     state.tims = 0;
     state.upgrades = {};
-    state.rebirths += 1;
+    state.rebirths += 100;
     saveNow();
     renderAll();
   };
