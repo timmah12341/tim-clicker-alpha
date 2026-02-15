@@ -212,7 +212,7 @@
   }
   var MUSIC = {
     lofi1: { name: 'Lofi 1', cost: 1200, file: 'assets/music/lofi1.wav' },
-    lofi2: { name: 'Lofi 2', cost: 2500, file: 'assets/music/lofi2.wav' }
+    lofi2: { name: 'Lofi 2', cost: 2500, file: 'assets/music/lofi2.mp3' }
   };
 
   var BACKGROUNDS = {
