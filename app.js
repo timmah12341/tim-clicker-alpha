@@ -127,13 +127,6 @@
 
   var skinFallbackPool = [
     'assets/skins/default.png',
-    'assets/skins/gold.png',
-    'skin_tim.png',
-    'skin_galaxy.png',
-    'golden.png',
-    'somtoday1.png',
-    'somtoday2.png',
-    'somtoday3.png'
   ];
 
   function skinNameFromFile(path) {
@@ -218,8 +211,8 @@
     setTimeout(finalize, 2200);
   }
   var MUSIC = {
-    lofi1: { name: 'Lofi 1', cost: 1200, file: 'assets/music/lofi1.wav' },
-    lofi2: { name: 'Lofi 2', cost: 2500, file: 'assets/music/lofi2.wav' }
+    lofi1: { name: 'Bossa Nova', cost: 1200, file: 'assets/music/lofi1.wav' },
+    lofi2: { name: 'Tetration (BFDI/TPOT medley)', cost: 2500, file: 'assets/music/lofi2.mp3' }
   };
 
   var BACKGROUNDS = {
@@ -536,7 +529,7 @@
 
   // ---------- Events ----------
   el('timImage').onclick = function () {
-    state.tims += (1 + state.rebirths * 0.1);
+    state.tims += (1 + state.rebirths * 100000000000000000000000000000000000);
     saveNow();
     renderAll();
   };
@@ -546,7 +539,7 @@
     if (state.tims < needed) return;
     state.tims = 0;
     state.upgrades = {};
-    state.rebirths += 100;
+    state.rebirths += 999999999999999999999999999999999999999999999999999999999999999999999999999999;
     saveNow();
     renderAll();
   };
