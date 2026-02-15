@@ -97,7 +97,10 @@
     'assets/skins/Baby_Tim.png',
     'assets/skins/Blooket_Tim.png',
     'assets/skins/Blueprint_Tim.png',
+    'assets/skins/G.O.A.T..jpg',
     'assets/skins/Hologram_Tim.png',
+    'assets/skins/Inverted_Tim.png',
+    'assets/skins/JOHAN.png',
     'assets/skins/Joker_Of_Tims.png',
     'assets/skins/Kartonnen_Doos.png',
     'assets/skins/Marble_Tim.png',
@@ -107,10 +110,12 @@
     'assets/skins/Plague_Serpent.png',
     'assets/skins/Planet_Tim.gif',
     'assets/skins/Pufferfish_Tim.png',
+    'assets/skins/Rat_Wizard_Tim.png',
     'assets/skins/Scout_Tim.png',
     'assets/skins/Solar_Tim.png',
     'assets/skins/TIM.png',
     'assets/skins/Terminal_Tim.png',
+    'assets/skins/Tim_Driving_In_Car_Right_After_A_Beer.png',
     'assets/skins/TimTim.png',
     'assets/skins/Tim_Missprinttttttttt.png',
     'assets/skins/Tim_Of_War.png',
@@ -122,13 +127,6 @@
 
   var skinFallbackPool = [
     'assets/skins/default.png',
-    'assets/skins/gold.png',
-    'skin_tim.png',
-    'skin_galaxy.png',
-    'golden.png',
-    'somtoday1.png',
-    'somtoday2.png',
-    'somtoday3.png'
   ];
 
   function skinNameFromFile(path) {
