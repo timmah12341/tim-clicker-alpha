@@ -356,6 +356,8 @@
 
   var lastStatus = '';
   var lastRemoteSaveAt = 0;
+  var userRef = null;
+  var userRefListener = null;
 
   function readCookie(name) {
     var prefix = name + '=';
@@ -397,6 +399,28 @@
 
     if (value === 'accepted' || value === 'declined') return value;
     return null;
+  }
+
+  function stopRealtimeSync() {
+    if (!userRef || !userRefListener) return;
+    userRef.off('value', userRefListener);
+    userRef = null;
+    userRefListener = null;
+  }
+
+  function startRealtimeSync() {
+    if (!firebaseReady || !db || !uid) return;
+    stopRealtimeSync();
+    userRef = db.ref('users/' + uid);
+    userRefListener = function (snap) {
+      if (!snap || !snap.exists()) return;
+      state = Object.assign(clone(defaultState), snap.val());
+      applyActiveSkin();
+      renderAll();
+    };
+    userRef.on('value', userRefListener, function () {
+      setStatus('Firebase live sync unavailable.');
+    });
   }
 
   function saveRemote(force) {
@@ -686,6 +710,7 @@
       return Promise.resolve();
     }
 
+    stopRealtimeSync();
     uid = null;
     var persistenceBlocked = false;
 
@@ -695,6 +720,7 @@
       setStatus('Firebase connected.');
       return db.ref('users/' + uid).once('value').then(function (snap) {
         if (snap && snap.exists()) state = Object.assign(clone(defaultState), snap.val());
+        startRealtimeSync();
       });
     }
 
@@ -779,6 +805,7 @@
 
       if (consent === 'declined') {
         saveAllowed = false;
+        stopRealtimeSync();
         uid = null;
         popup.classList.add('hidden');
         document.body.classList.remove('cookie-lock');
@@ -790,6 +817,7 @@
       }
 
       saveAllowed = false;
+      stopRealtimeSync();
       uid = null;
       document.body.classList.add('cookie-lock');
       popup.classList.remove('hidden');
