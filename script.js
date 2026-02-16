@@ -712,12 +712,14 @@
 
     stopRealtimeSync();
     uid = null;
+    window.timClickerUid = null;
     var persistenceBlocked = false;
 
     function syncForUser(user) {
       if (!user) return Promise.resolve();
       uid = user.uid;
-      setStatus('Firebase connected.');
+      window.timClickerUid = uid;
+      setStatus('Firebase connected. UID: ' + uid);
       return db.ref('users/' + uid).once('value').then(function (snap) {
         if (snap && snap.exists()) state = Object.assign(clone(defaultState), snap.val());
         startRealtimeSync();
@@ -799,6 +801,11 @@
           applyActiveSkin();
           openIfNamed();
           renderAll();
+        }).catch(function () {
+          setStatus('Firebase init failed. Playing with local state only.');
+          applyActiveSkin();
+          openIfNamed();
+          renderAll();
         });
         return;
       }
@@ -807,6 +814,7 @@
         saveAllowed = false;
         stopRealtimeSync();
         uid = null;
+        window.timClickerUid = null;
         popup.classList.add('hidden');
         document.body.classList.remove('cookie-lock');
         setStatus('Saving declined. Nothing will be saved (risk accepted).');
@@ -819,6 +827,7 @@
       saveAllowed = false;
       stopRealtimeSync();
       uid = null;
+      window.timClickerUid = null;
       document.body.classList.add('cookie-lock');
       popup.classList.remove('hidden');
       setStatus('Please accept or decline saving cookies.');
