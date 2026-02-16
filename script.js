@@ -753,7 +753,7 @@
   function boot() {
     applyBackground();
     applyActiveSkin();
-    document.body.classList.add('cookie-lock');
+    var popup = el('cookiePopup');
 
     function openIfNamed() {
       if (!state.name) return;
@@ -763,18 +763,34 @@
       renderAll();
     }
 
-    el('acceptCookiesBtn').onclick = function () {
-      saveAllowed = true;
-      el('cookiePopup').classList.add('hidden');
-      document.body.classList.remove('cookie-lock');
-      loadLocal();
-      initFirebaseAuth().then(function () {
+    function continueAfterConsent(consent) {
+      if (consent === 'accepted') {
+        saveAllowed = true;
+        popup.classList.add('hidden');
+        document.body.classList.remove('cookie-lock');
+        loadLocal();
+        initFirebaseAuth().then(function () {
+          applyActiveSkin();
+          openIfNamed();
+          renderAll();
+        });
+        return;
+      }
+
+      if (consent === 'declined') {
+        saveAllowed = false;
+        uid = null;
+        popup.classList.add('hidden');
+        document.body.classList.remove('cookie-lock');
+        setStatus('Saving declined. Nothing will be saved (risk accepted).');
         applyActiveSkin();
         openIfNamed();
         renderAll();
         return;
       }
 
+      saveAllowed = false;
+      uid = null;
       document.body.classList.add('cookie-lock');
       popup.classList.remove('hidden');
       setStatus('Please accept or decline saving cookies.');
@@ -786,14 +802,8 @@
     };
 
     el('declineCookiesBtn').onclick = function () {
-      saveAllowed = false;
-      uid = null;
-      el('cookiePopup').classList.add('hidden');
-      document.body.classList.remove('cookie-lock');
-      setStatus('Saving declined. Nothing will be saved (risk accepted).');
-      applyActiveSkin();
-      openIfNamed();
-      renderAll();
+      storeConsent('declined');
+      continueAfterConsent('declined');
     };
 
     continueAfterConsent(readConsent());
