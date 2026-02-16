@@ -356,6 +356,8 @@
 
   var lastStatus = '';
   var lastRemoteSaveAt = 0;
+  var userRef = null;
+  var userRefListener = null;
 
   function readCookie(name) {
     var prefix = name + '=';
@@ -397,6 +399,28 @@
 
     if (value === 'accepted' || value === 'declined') return value;
     return null;
+  }
+
+  function stopRealtimeSync() {
+    if (!userRef || !userRefListener) return;
+    userRef.off('value', userRefListener);
+    userRef = null;
+    userRefListener = null;
+  }
+
+  function startRealtimeSync() {
+    if (!firebaseReady || !db || !uid) return;
+    stopRealtimeSync();
+    userRef = db.ref('users/' + uid);
+    userRefListener = function (snap) {
+      if (!snap || !snap.exists()) return;
+      state = Object.assign(clone(defaultState), snap.val());
+      applyActiveSkin();
+      renderAll();
+    };
+    userRef.on('value', userRefListener, function () {
+      setStatus('Firebase live sync unavailable.');
+    });
   }
 
   function saveRemote(force) {
@@ -686,15 +710,19 @@
       return Promise.resolve();
     }
 
+    stopRealtimeSync();
     uid = null;
+    window.timClickerUid = null;
     var persistenceBlocked = false;
 
     function syncForUser(user) {
       if (!user) return Promise.resolve();
       uid = user.uid;
-      setStatus('Firebase connected.');
+      window.timClickerUid = uid;
+      setStatus('Firebase connected. UID: ' + uid);
       return db.ref('users/' + uid).once('value').then(function (snap) {
         if (snap && snap.exists()) state = Object.assign(clone(defaultState), snap.val());
+        startRealtimeSync();
       });
     }
 
@@ -753,7 +781,7 @@
   function boot() {
     applyBackground();
     applyActiveSkin();
-    document.body.classList.add('cookie-lock');
+    var popup = el('cookiePopup');
 
     function openIfNamed() {
       if (!state.name) return;
@@ -763,18 +791,43 @@
       renderAll();
     }
 
-    el('acceptCookiesBtn').onclick = function () {
-      saveAllowed = true;
-      el('cookiePopup').classList.add('hidden');
-      document.body.classList.remove('cookie-lock');
-      loadLocal();
-      initFirebaseAuth().then(function () {
+    function continueAfterConsent(consent) {
+      if (consent === 'accepted') {
+        saveAllowed = true;
+        popup.classList.add('hidden');
+        document.body.classList.remove('cookie-lock');
+        loadLocal();
+        initFirebaseAuth().then(function () {
+          applyActiveSkin();
+          openIfNamed();
+          renderAll();
+        }).catch(function () {
+          setStatus('Firebase init failed. Playing with local state only.');
+          applyActiveSkin();
+          openIfNamed();
+          renderAll();
+        });
+        return;
+      }
+
+      if (consent === 'declined') {
+        saveAllowed = false;
+        stopRealtimeSync();
+        uid = null;
+        window.timClickerUid = null;
+        popup.classList.add('hidden');
+        document.body.classList.remove('cookie-lock');
+        setStatus('Saving declined. Nothing will be saved (risk accepted).');
         applyActiveSkin();
         openIfNamed();
         renderAll();
         return;
       }
 
+      saveAllowed = false;
+      stopRealtimeSync();
+      uid = null;
+      window.timClickerUid = null;
       document.body.classList.add('cookie-lock');
       popup.classList.remove('hidden');
       setStatus('Please accept or decline saving cookies.');
@@ -786,14 +839,8 @@
     };
 
     el('declineCookiesBtn').onclick = function () {
-      saveAllowed = false;
-      uid = null;
-      el('cookiePopup').classList.add('hidden');
-      document.body.classList.remove('cookie-lock');
-      setStatus('Saving declined. Nothing will be saved (risk accepted).');
-      applyActiveSkin();
-      openIfNamed();
-      renderAll();
+      storeConsent('declined');
+      continueAfterConsent('declined');
     };
 
     continueAfterConsent(readConsent());
