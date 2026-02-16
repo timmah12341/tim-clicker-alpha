@@ -219,7 +219,6 @@
 
   var BACKGROUNDS = {
     dark: { name: 'Dark', cost: 0, file: '' },
-    snuffels: { name: 'Snuffels', cost: 2200, file: 'BgBg.png' },
     ball: { name: 'Ball Guys', cost: 3000, file: 'Ball Guys Background.png' },
     davdd: { name: 'DAVDD', cost: 3500, file: 'assets/backgrounds/DAVDD.png' }
   };
