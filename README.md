@@ -1,1 +1,1 @@
-PRIVAT
+PRIVA
