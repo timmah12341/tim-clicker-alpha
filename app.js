@@ -385,6 +385,16 @@
     }
   }
 
+  function applyActiveSkin() {
+    var timImage = el('timImage');
+    if (!timImage) return;
+    var skin = currentSkin();
+    if (!skin || !skin.file) return;
+    if (timImage.getAttribute('src') !== skin.file) {
+      timImage.src = skin.file;
+    }
+  }
+
   // ---------- Render ----------
   function updateStats() {
     var coinId = state.activeCoin;
@@ -395,7 +405,6 @@
     el('eventText').textContent = (EVENTS[state.activeEvent] || EVENTS.NONE).name;
     el('coinPrice').textContent = state.coinPrice[coinId].toFixed(1);
     el('coinWallet').textContent = state.coinWallet[coinId].toFixed(2);
-    el('timImage').src = currentSkin().file;
   }
 
   function renderUpgrades() {
@@ -438,6 +447,7 @@
             state.skinsOwned.push(skin.id);
           }
           state.activeSkin = skin.id;
+          applyActiveSkin();
           saveNow(true);
           renderAll();
         };
@@ -647,34 +657,24 @@
 
   function boot() {
     applyBackground();
-    var popup = el('cookiePopup');
+    applyActiveSkin();
+    document.body.classList.add('cookie-lock');
 
     function openIfNamed() {
       if (!state.name) return;
       el('namePanel').classList.add('hidden');
       el('gamePanel').classList.remove('hidden');
+      applyActiveSkin();
       renderAll();
     }
 
-    function continueAfterConsent(consent) {
-      if (consent === 'accepted') {
-        saveAllowed = true;
-        popup.classList.add('hidden');
-        document.body.classList.remove('cookie-lock');
-        loadLocal();
-        initFirebaseAuth().then(function () {
-          openIfNamed();
-          renderAll();
-        });
-        return;
-      }
-
-      if (consent === 'declined') {
-        saveAllowed = false;
-        uid = null;
-        popup.classList.add('hidden');
-        document.body.classList.remove('cookie-lock');
-        setStatus('Saving declined. Nothing will be saved (risk accepted).');
+    el('acceptCookiesBtn').onclick = function () {
+      saveAllowed = true;
+      el('cookiePopup').classList.add('hidden');
+      document.body.classList.remove('cookie-lock');
+      loadLocal();
+      initFirebaseAuth().then(function () {
+        applyActiveSkin();
         openIfNamed();
         renderAll();
         return;
@@ -691,8 +691,14 @@
     };
 
     el('declineCookiesBtn').onclick = function () {
-      storeConsent('declined');
-      continueAfterConsent('declined');
+      saveAllowed = false;
+      uid = null;
+      el('cookiePopup').classList.add('hidden');
+      document.body.classList.remove('cookie-lock');
+      setStatus('Saving declined. Nothing will be saved (risk accepted).');
+      applyActiveSkin();
+      openIfNamed();
+      renderAll();
     };
 
     continueAfterConsent(readConsent());
