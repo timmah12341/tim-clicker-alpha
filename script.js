@@ -229,13 +229,6 @@
     fish: { name: 'Fish Minigame', cost: 300, reward: 900, winChance: 0.38 }
   };
 
-  var EVENTS = {
-    NONE: { name: 'None', mult: 1 },
-    RAIN: { name: 'Rain', mult: 1.5 },
-    THUNDER: { name: 'Thunder', mult: 2 },
-    DISCO: { name: 'Disco', mult: 2.4 }
-  };
-
   var COINS = {
     JOHAN: { name: 'Johan coin', vol: 11 },
     CHATGPT: { name: 'ChatcoinGPT', vol: 8 },
@@ -252,7 +245,6 @@
     musicOwned: [],
     bgOwned: ['dark'],
     activeBg: 'dark',
-    activeEvent: 'NONE',
     activeCoin: 'JOHAN',
     coinPrice: { JOHAN: 120, CHATGPT: 90, KIRB: 200 },
     coinWallet: { JOHAN: 0, CHATGPT: 0, KIRB: 0 }
@@ -287,7 +279,7 @@
     }
     total *= currentSkin().mult;
     total *= (1 + state.rebirths * 0.25);
-    total *= (EVENTS[state.activeEvent] || EVENTS.NONE).mult;
+    total *= 1;
     return total;
   }
 
@@ -403,7 +395,6 @@
     el('tims').textContent = Math.floor(state.tims);
     el('cps').textContent = cps().toFixed(1);
     el('rebirths').textContent = state.rebirths;
-    el('eventText').textContent = (EVENTS[state.activeEvent] || EVENTS.NONE).name;
     el('coinPrice').textContent = state.coinPrice[coinId].toFixed(1);
     el('coinWallet').textContent = state.coinWallet[coinId].toFixed(2);
   }
