@@ -686,18 +686,67 @@
       return Promise.resolve();
     }
 
-    return auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
-      .then(function () { return auth.signInAnonymously(); })
-      .then(function (res) {
-        uid = res.user.uid;
-        setStatus('Firebase connected.');
-        return db.ref('users/' + uid).once('value');
-      })
-      .then(function (snap) {
+    uid = null;
+    var persistenceBlocked = false;
+
+    function syncForUser(user) {
+      if (!user) return Promise.resolve();
+      uid = user.uid;
+      setStatus('Firebase connected.');
+      return db.ref('users/' + uid).once('value').then(function (snap) {
         if (snap && snap.exists()) state = Object.assign(clone(defaultState), snap.val());
-      })
+      });
+    }
+
+    return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
       .catch(function () {
-        setStatus('Firebase auth blocked. Playing without cloud save.');
+        persistenceBlocked = true;
+        return auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(function () {
+          return Promise.resolve();
+        });
+      })
+      .then(function () {
+        return new Promise(function (resolve) {
+          var done = false;
+          function finish() {
+            if (done) return;
+            done = true;
+            resolve();
+          }
+
+          var unsubscribe = auth.onAuthStateChanged(function (user) {
+            unsubscribe();
+
+            if (user || auth.currentUser) {
+              syncForUser(user || auth.currentUser)
+                .then(finish)
+                .catch(function () {
+                  setStatus('Firebase sync failed. Using local save only.');
+                  finish();
+                });
+              return;
+            }
+
+            if (persistenceBlocked) {
+              setStatus('Firebase persistence blocked. Using local save only to avoid account churn.');
+              finish();
+              return;
+            }
+
+            auth.signInAnonymously()
+              .then(function (res) {
+                return syncForUser(res.user);
+              })
+              .then(finish)
+              .catch(function () {
+                setStatus('Firebase auth blocked. Playing without cloud save.');
+                finish();
+              });
+          }, function () {
+            setStatus('Firebase auth blocked. Playing without cloud save.');
+            finish();
+          });
+        });
       });
   }
 
