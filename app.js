@@ -16,6 +16,7 @@
   var db = null;
   var uid = null;
   var saveAllowed = false;
+  var CONSENT_KEY = 'tim_cookie_consent_v1';
 
   try {
     if (window.firebase && !firebase.apps.length) {
@@ -308,6 +309,48 @@
 
   var lastStatus = '';
   var lastRemoteSaveAt = 0;
+
+  function readCookie(name) {
+    var prefix = name + '=';
+    var parts = document.cookie ? document.cookie.split(';') : [];
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i].trim();
+      if (part.indexOf(prefix) === 0) return decodeURIComponent(part.slice(prefix.length));
+    }
+    return null;
+  }
+
+  function mirrorConsentCookie(value) {
+    try {
+      document.cookie = CONSENT_KEY + '=' + encodeURIComponent(value) + '; Max-Age=31536000; Path=/; SameSite=Lax';
+    } catch (err) {}
+  }
+
+  function storeConsent(value) {
+    try {
+      localStorage.setItem(CONSENT_KEY, value);
+    } catch (err) {}
+    mirrorConsentCookie(value);
+  }
+
+  function readConsent() {
+    var value = null;
+    try {
+      value = localStorage.getItem(CONSENT_KEY);
+    } catch (err) {}
+
+    if (value !== 'accepted' && value !== 'declined') {
+      value = readCookie(CONSENT_KEY);
+      if (value === 'accepted' || value === 'declined') {
+        try {
+          localStorage.setItem(CONSENT_KEY, value);
+        } catch (err) {}
+      }
+    }
+
+    if (value === 'accepted' || value === 'declined') return value;
+    return null;
+  }
 
   function saveRemote(force) {
     if (!saveAllowed) return;
@@ -604,7 +647,7 @@
 
   function boot() {
     applyBackground();
-    document.body.classList.add('cookie-lock');
+    var popup = el('cookiePopup');
 
     function openIfNamed() {
       if (!state.name) return;
@@ -613,28 +656,46 @@
       renderAll();
     }
 
-    el('acceptCookiesBtn').onclick = function () {
-      saveAllowed = true;
-      el('cookiePopup').classList.add('hidden');
-      document.body.classList.remove('cookie-lock');
-      loadLocal();
-      initFirebaseAuth().then(function () {
+    function continueAfterConsent(consent) {
+      if (consent === 'accepted') {
+        saveAllowed = true;
+        popup.classList.add('hidden');
+        document.body.classList.remove('cookie-lock');
+        loadLocal();
+        initFirebaseAuth().then(function () {
+          openIfNamed();
+          renderAll();
+        });
+        return;
+      }
+
+      if (consent === 'declined') {
+        saveAllowed = false;
+        uid = null;
+        popup.classList.add('hidden');
+        document.body.classList.remove('cookie-lock');
+        setStatus('Saving declined. Nothing will be saved (risk accepted).');
         openIfNamed();
         renderAll();
-      });
+        return;
+      }
+
+      document.body.classList.add('cookie-lock');
+      popup.classList.remove('hidden');
+      setStatus('Please accept or decline saving cookies.');
+    }
+
+    el('acceptCookiesBtn').onclick = function () {
+      storeConsent('accepted');
+      continueAfterConsent('accepted');
     };
 
     el('declineCookiesBtn').onclick = function () {
-      saveAllowed = false;
-      uid = null;
-      el('cookiePopup').classList.add('hidden');
-      document.body.classList.remove('cookie-lock');
-      setStatus('Saving declined. Nothing will be saved (risk accepted).');
-      openIfNamed();
-      renderAll();
+      storeConsent('declined');
+      continueAfterConsent('declined');
     };
 
-    setStatus('Please accept or decline saving cookies.');
+    continueAfterConsent(readConsent());
   }
 
   loadSkinCatalog(function () {
