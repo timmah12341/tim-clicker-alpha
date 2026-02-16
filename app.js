@@ -1,15 +1,8 @@
 (function () {
   'use strict';
 
-  // ---------- Firebase ----------
-  var firebaseConfig = {};
-  firebaseConfig.apiKey = 'AIzaSyDleRW-O4yP9FJhuqQtMTVT0c_Dd1PPA98';
-  firebaseConfig.authDomain = 'tim-clicker-alpha.firebaseapp.com';
-  firebaseConfig.databaseURL = 'https://tim-clicker-alpha-default-rtdb.europe-west1.firebasedatabase.app';
-  firebaseConfig.projectId = 'tim-clicker-alpha';
-  firebaseConfig.storageBucket = 'tim-clicker-alpha.firebasestorage.app';
-  firebaseConfig.messagingSenderId = '40617780569';
-  firebaseConfig.appId = '1:40617780569:web:1a82146a3554ab1e365848';
+  // Legacy shim: keep app.js for old bookmarks/caches, but run the canonical runtime.
+  if (document.querySelector('script[data-tim-clicker-runtime="script-js"]')) return;
 
   var firebaseReady = false;
   var auth = null;
