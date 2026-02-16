@@ -16,6 +16,7 @@
   var db = null;
   var uid = null;
   var saveAllowed = false;
+  var CONSENT_KEY = 'tim_cookie_consent_v1';
 
   try {
     if (window.firebase && !firebase.apps.length) {
@@ -90,14 +91,13 @@
   var SKINS = [];
   var skinCandidates = [
     'assets/skins/default.png',
-    'assets/skins/Gold.png',
     'assets/skins/AMONG_US.png',
     'assets/skins/Assasin_Tim.png',
     'assets/skins/B.T.S._Tim.png',
     'assets/skins/Baby_Tim.png',
     'assets/skins/Blooket_Tim.png',
     'assets/skins/Blueprint_Tim.png',
-    'assets/skins/G.O.A.T..jpg',
+    'assets/skins/Gold.png',
     'assets/skins/Hologram_Tim.png',
     'assets/skins/Inverted_Tim.png',
     'assets/skins/JOHAN.png',
@@ -127,6 +127,61 @@
     'assets/skins/Timton_G_Timton.png'
   ];
 
+  var knownSkinFiles = {
+    'assets/skins/default.png': true,
+    'assets/skins/AMONG_US.png': true,
+    'assets/skins/Assasin_Tim.png': true,
+    'assets/skins/B.T.S._Tim.png': true,
+    'assets/skins/Baby_Tim.png': true,
+    'assets/skins/Blooket_Tim.png': true,
+    'assets/skins/Blueprint_Tim.png': true,
+    'assets/skins/Gold.png': true,
+    'assets/skins/Hologram_Tim.png': true,
+    'assets/skins/Inverted_Tim.png': true,
+    'assets/skins/JOHAN.png': true,
+    'assets/skins/Johnny_Tims.png': true,
+    'assets/skins/Joker_Of_Tims.png': true,
+    'assets/skins/Kartonnen_Doos.png': true,
+    'assets/skins/Marble_Tim.png': true,
+    'assets/skins/Mr._Timmah.png': true,
+    'assets/skins/Neutronen_Tim.png': true,
+    'assets/skins/Nyan_Tim.png': true,
+    'assets/skins/Plague_Serpent.png': true,
+    'assets/skins/Planet_Tim.gif': true,
+    'assets/skins/Pufferfish_Tim.png': true,
+    'assets/skins/Rat_Wizard_Tim.png': true,
+    'assets/skins/Scout_Tim.png': true,
+    'assets/skins/Solar_Tim.png': true,
+    'assets/skins/TIM.png': true,
+    'assets/skins/Terminal_Tim.png': true,
+    'assets/skins/Tim_Driving_In_Car_Right_After_A_Beer.png': true,
+    'assets/skins/Tim_Missprinttttttttt.png': true,
+    'assets/skins/Tim_Of_War.png': true,
+    'assets/skins/TimaCola.png': true,
+    'assets/skins/Timpy.png': true,
+    'assets/skins/TimTim.png': true,
+    'assets/skins/Timtoday.png': true,
+    'assets/skins/TimoBama.png': true,
+    'assets/skins/Timton_G_Timton.png': true
+  };
+
+  function prepareSkinCandidates(candidates) {
+    var validExt = /\.(png|gif)$/i;
+    var seen = {};
+    var normalized = [];
+    for (var i = 0; i < candidates.length; i++) {
+      var candidate = (candidates[i] || '').trim();
+      if (!candidate || seen[candidate]) continue;
+      seen[candidate] = true;
+      if (!validExt.test(candidate)) continue;
+      if (!knownSkinFiles[candidate]) continue;
+      normalized.push(candidate);
+    }
+    return normalized;
+  }
+
+  var validatedSkinCandidates = prepareSkinCandidates(skinCandidates);
+
   var skinFallbackPool = [
     'assets/skins/default.png',
   ];
@@ -141,7 +196,7 @@
 
   function loadSkinCatalog(done) {
     var entries = [];
-    var remaining = skinCandidates.length;
+    var remaining = validatedSkinCandidates.length;
     var completed = false;
 
     function finalize() {
@@ -206,8 +261,8 @@
       return;
     }
 
-    for (var i = 0; i < skinCandidates.length; i++) {
-      resolveCandidate(skinCandidates[i], i);
+    for (var i = 0; i < validatedSkinCandidates.length; i++) {
+      resolveCandidate(validatedSkinCandidates[i], i);
     }
 
     setTimeout(finalize, 2200);
@@ -228,13 +283,6 @@
     fish: { name: 'Fish Minigame', cost: 300, reward: 900, winChance: 0.38 }
   };
 
-  var EVENTS = {
-    NONE: { name: 'None', mult: 1 },
-    RAIN: { name: 'Rain', mult: 1.5 },
-    THUNDER: { name: 'Thunder', mult: 2 },
-    DISCO: { name: 'Disco', mult: 2.4 }
-  };
-
   var COINS = {
     JOHAN: { name: 'Johan coin', vol: 11 },
     CHATGPT: { name: 'ChatcoinGPT', vol: 8 },
@@ -251,7 +299,6 @@
     musicOwned: [],
     bgOwned: ['dark'],
     activeBg: 'dark',
-    activeEvent: 'NONE',
     activeCoin: 'JOHAN',
     coinPrice: { JOHAN: 120, CHATGPT: 90, KIRB: 200 },
     coinWallet: { JOHAN: 0, CHATGPT: 0, KIRB: 0 }
@@ -286,7 +333,7 @@
     }
     total *= currentSkin().mult;
     total *= (1 + state.rebirths * 0.25);
-    total *= (EVENTS[state.activeEvent] || EVENTS.NONE).mult;
+    total *= 1;
     return total;
   }
 
@@ -309,6 +356,48 @@
 
   var lastStatus = '';
   var lastRemoteSaveAt = 0;
+
+  function readCookie(name) {
+    var prefix = name + '=';
+    var parts = document.cookie ? document.cookie.split(';') : [];
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i].trim();
+      if (part.indexOf(prefix) === 0) return decodeURIComponent(part.slice(prefix.length));
+    }
+    return null;
+  }
+
+  function mirrorConsentCookie(value) {
+    try {
+      document.cookie = CONSENT_KEY + '=' + encodeURIComponent(value) + '; Max-Age=31536000; Path=/; SameSite=Lax';
+    } catch (err) {}
+  }
+
+  function storeConsent(value) {
+    try {
+      localStorage.setItem(CONSENT_KEY, value);
+    } catch (err) {}
+    mirrorConsentCookie(value);
+  }
+
+  function readConsent() {
+    var value = null;
+    try {
+      value = localStorage.getItem(CONSENT_KEY);
+    } catch (err) {}
+
+    if (value !== 'accepted' && value !== 'declined') {
+      value = readCookie(CONSENT_KEY);
+      if (value === 'accepted' || value === 'declined') {
+        try {
+          localStorage.setItem(CONSENT_KEY, value);
+        } catch (err) {}
+      }
+    }
+
+    if (value === 'accepted' || value === 'declined') return value;
+    return null;
+  }
 
   function saveRemote(force) {
     if (!saveAllowed) return;
@@ -343,6 +432,16 @@
     }
   }
 
+  function applyActiveSkin() {
+    var timImage = el('timImage');
+    if (!timImage) return;
+    var skin = currentSkin();
+    if (!skin || !skin.file) return;
+    if (timImage.getAttribute('src') !== skin.file) {
+      timImage.src = skin.file;
+    }
+  }
+
   // ---------- Render ----------
   function updateStats() {
     var coinId = state.activeCoin;
@@ -350,10 +449,8 @@
     el('tims').textContent = Math.floor(state.tims);
     el('cps').textContent = cps().toFixed(1);
     el('rebirths').textContent = state.rebirths;
-    el('eventText').textContent = (EVENTS[state.activeEvent] || EVENTS.NONE).name;
     el('coinPrice').textContent = state.coinPrice[coinId].toFixed(1);
     el('coinWallet').textContent = state.coinWallet[coinId].toFixed(2);
-    el('timImage').src = currentSkin().file;
   }
 
   function renderUpgrades() {
@@ -396,6 +493,7 @@
             state.skinsOwned.push(skin.id);
           }
           state.activeSkin = skin.id;
+          applyActiveSkin();
           saveNow(true);
           renderAll();
         };
@@ -605,12 +703,14 @@
 
   function boot() {
     applyBackground();
+    applyActiveSkin();
     document.body.classList.add('cookie-lock');
 
     function openIfNamed() {
       if (!state.name) return;
       el('namePanel').classList.add('hidden');
       el('gamePanel').classList.remove('hidden');
+      applyActiveSkin();
       renderAll();
     }
 
@@ -620,9 +720,20 @@
       document.body.classList.remove('cookie-lock');
       loadLocal();
       initFirebaseAuth().then(function () {
+        applyActiveSkin();
         openIfNamed();
         renderAll();
-      });
+        return;
+      }
+
+      document.body.classList.add('cookie-lock');
+      popup.classList.remove('hidden');
+      setStatus('Please accept or decline saving cookies.');
+    }
+
+    el('acceptCookiesBtn').onclick = function () {
+      storeConsent('accepted');
+      continueAfterConsent('accepted');
     };
 
     el('declineCookiesBtn').onclick = function () {
@@ -631,11 +742,12 @@
       el('cookiePopup').classList.add('hidden');
       document.body.classList.remove('cookie-lock');
       setStatus('Saving declined. Nothing will be saved (risk accepted).');
+      applyActiveSkin();
       openIfNamed();
       renderAll();
     };
 
-    setStatus('Please accept or decline saving cookies.');
+    continueAfterConsent(readConsent());
   }
 
   loadSkinCatalog(function () {
