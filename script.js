@@ -101,6 +101,7 @@
     'assets/skins/Hologram_Tim.png',
     'assets/skins/Inverted_Tim.png',
     'assets/skins/JOHAN.png',
+    'assets/skins/Johnny_Tims.png',
     'assets/skins/Joker_Of_Tims.png',
     'assets/skins/Kartonnen_Doos.png',
     'assets/skins/Marble_Tim.png',
@@ -121,6 +122,7 @@
     'assets/skins/Tim_Of_War.png',
     'assets/skins/TimaCola.png',
     'assets/skins/TimoBama.png',
+    'assets/skins/Timpy.png',
     'assets/skins/Timtoday.png',
     'assets/skins/Timton_G_Timton.png'
   ];
