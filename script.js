@@ -337,6 +337,10 @@
     return total;
   }
 
+  function rebirthCost() {
+    return 1000000 * Math.pow(3, state.rebirths);
+  }
+
   function saveLocal() {
     if (!saveAllowed) return;
     try {
@@ -469,10 +473,12 @@
   // ---------- Render ----------
   function updateStats() {
     var coinId = state.activeCoin;
+    var needed = rebirthCost();
     el('playerName').textContent = state.name;
     el('tims').textContent = Math.floor(state.tims);
     el('cps').textContent = cps().toFixed(1);
     el('rebirths').textContent = state.rebirths;
+    el('rebirthBtn').textContent = 'Rebirth (' + Math.floor(needed) + ')';
     el('coinPrice').textContent = state.coinPrice[coinId].toFixed(1);
     el('coinWallet').textContent = state.coinWallet[coinId].toFixed(2);
   }
@@ -658,17 +664,7 @@
   };
 
   el('rebirthBtn').onclick = function () {
-    var needed = 1
-    if (state.tims < needed) return;
-    state.tims = 0;
-    state.upgrades = {};
-    state.rebirths += 1;
-    saveNow();
-    renderAll();
-  };
-
-  el('rebirthBtn').onclick = function () {
-    var needed = 1000000 * Math.pow(3, state.rebirths);
+    var needed = rebirthCost();
     if (state.tims < needed) return;
     state.tims = 0;
     state.upgrades = {};
