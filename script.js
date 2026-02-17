@@ -98,6 +98,7 @@
     'assets/skins/Blooket_Tim.png',
     'assets/skins/Blueprint_Tim.png',
     'assets/skins/Gold.png',
+    'assets/skins/G.O.A.T..jpg',
     'assets/skins/Hologram_Tim.png',
     'assets/skins/Inverted_Tim.png',
     'assets/skins/JOHAN.png',
@@ -129,46 +130,8 @@
     'assets/skins/Timton_G_Timton.png'
   ];
 
-  var knownSkinFiles = {
-    'assets/skins/default.png': true,
-    'assets/skins/AMONG_US.png': true,
-    'assets/skins/Assasin_Tim.png': true,
-    'assets/skins/B.T.S._Tim.png': true,
-    'assets/skins/Baby_Tim.png': true,
-    'assets/skins/Blooket_Tim.png': true,
-    'assets/skins/Blueprint_Tim.png': true,
-    'assets/skins/Gold.png': true,
-    'assets/skins/Hologram_Tim.png': true,
-    'assets/skins/Inverted_Tim.png': true,
-    'assets/skins/JOHAN.png': true,
-    'assets/skins/Johnny_Tims.png': true,
-    'assets/skins/Joker_Of_Tims.png': true,
-    'assets/skins/Kartonnen_Doos.png': true,
-    'assets/skins/Marble_Tim.png': true,
-    'assets/skins/Mr._Timmah.png': true,
-    'assets/skins/Neutronen_Tim.png': true,
-    'assets/skins/Nyan_Tim.png': true,
-    'assets/skins/Plague_Serpent.png': true,
-    'assets/skins/Planet_Tim.gif': true,
-    'assets/skins/Pufferfish_Tim.png': true,
-    'assets/skins/Rat_Wizard_Tim.png': true,
-    'assets/skins/Scout_Tim.png': true,
-    'assets/skins/Solar_Tim.png': true,
-    'assets/skins/TIM.png': true,
-    'assets/skins/Terminal_Tim.png': true,
-    'assets/skins/Tim_Driving_In_Car_Right_After_A_Beer.png': true,
-    'assets/skins/Tim_Missprinttttttttt.png': true,
-    'assets/skins/Tim_Of_War.png': true,
-    'assets/skins/TimaCola.png': true,
-    'assets/skins/Timpy.png': true,
-    'assets/skins/TimTim.png': true,
-    'assets/skins/Timtoday.png': true,
-    'assets/skins/TimoBama.png': true,
-    'assets/skins/Timton_G_Timton.png': true
-  };
-
   function prepareSkinCandidates(candidates) {
-    var validExt = /\.(png|gif)$/i;
+    var validExt = /\.(png|gif|jpe?g|webp)$/i;
     var seen = {};
     var normalized = [];
     for (var i = 0; i < candidates.length; i++) {
@@ -176,7 +139,6 @@
       if (!candidate || seen[candidate]) continue;
       seen[candidate] = true;
       if (!validExt.test(candidate)) continue;
-      if (!knownSkinFiles[candidate]) continue;
       normalized.push(candidate);
     }
     return normalized;
