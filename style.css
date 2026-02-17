@@ -210,3 +210,35 @@ body.cookie-lock { overflow: hidden; }
 }
 
 .card a { color: #9dc0ff; }
+
+.hidden { display: none !important; }
+
+.bp-progress-wrap {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  height: 14px;
+  margin: 8px 0 10px;
+}
+
+.bp-progress {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #58ca8f, #6fa2ff);
+  transition: width 0.2s ease;
+}
+
+.quest-item {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(13, 20, 40, 0.55);
+}
+
+#authPanel button {
+  max-width: 360px;
+}

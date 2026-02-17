@@ -17,6 +17,15 @@
       <p id="firebaseStatus" class="status"></p>
     </section>
 
+    <section id="authPanel" class="card hidden">
+      <h2>Login</h2>
+      <p>Login after cookie consent to sync progress and unlock account battle pass rewards.</p>
+      <button id="googleLoginBtn">Login with Google</button>
+      <button id="guestLoginBtn">Continue as Guest</button>
+      <button id="logoutBtn" class="danger hidden">Logout</button>
+      <p id="authStatus" class="status"></p>
+    </section>
+
     <section id="gamePanel" class="hidden">
       <header class="card stats">
         <div><span>Player</span><b id="playerName">-</b></div>
@@ -38,6 +47,15 @@
       <section class="card">
         <h2>Skins</h2>
         <div id="skinShop" class="grid"></div>
+      </section>
+
+      <section class="card">
+        <h2>Free Battle Pass</h2>
+        <p id="battlePassSummary" class="status"></p>
+        <div class="bp-progress-wrap"><div id="battlePassProgress" class="bp-progress"></div></div>
+        <div id="battlePassRewards" class="grid"></div>
+        <h3>Quests</h3>
+        <div id="questList" class="grid"></div>
       </section>
 
       <section class="card">

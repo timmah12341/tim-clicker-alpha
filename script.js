@@ -255,6 +255,26 @@
     KIRB: { name: 'Kirbcoin', vol: 16 }
   };
 
+  var BATTLE_PASS = {
+    xpPerLevel: 100,
+    maxLevel: 8,
+    rewards: [
+      { level: 1, type: 'tims', amount: 600, label: '+600 Tims' },
+      { level: 2, type: 'skin', skinFile: 'assets/skins/Planet_Tim.gif', skinName: 'Planet Tim', label: 'Skin: Planet Tim' },
+      { level: 3, type: 'rebirth', amount: 1, label: '+1 Rebirth' },
+      { level: 4, type: 'tims', amount: 5000, label: '+5,000 Tims' },
+      { level: 5, type: 'skin', skinFile: 'assets/skins/Hologram_Tim.png', skinName: 'Hologram Tim', label: 'Skin: Hologram Tim' },
+      { level: 6, type: 'rebirth', amount: 2, label: '+2 Rebirths' },
+      { level: 7, type: 'coin', amount: 4, label: '+4 Random Fake Crypto' },
+      { level: 8, type: 'rebirth', amount: 3, label: '+3 Rebirths' }
+    ],
+    quests: [
+      { id: 'clicker', name: 'Click Sprint', description: 'Click Tim 40 times.', goal: 40, xp: 40, metric: 'clicks' },
+      { id: 'spender', name: 'Go Shopping', description: 'Buy 5 upgrades.', goal: 5, xp: 55, metric: 'upgradesBought' },
+      { id: 'mini', name: 'Minigame Mania', description: 'Play 3 minigames.', goal: 3, xp: 35, metric: 'minigamesPlayed' }
+    ]
+  };
+
   var defaultState = {
     name: '',
     tims: 0,
@@ -267,7 +287,10 @@
     activeBg: 'dark',
     activeCoin: 'JOHAN',
     coinPrice: { JOHAN: 120, CHATGPT: 90, KIRB: 200 },
-    coinWallet: { JOHAN: 5, CHATGPT: 0, KIRB: 0 }
+    coinWallet: { JOHAN: 5, CHATGPT: 0, KIRB: 0 },
+    battlePassXp: 0,
+    battlePassClaimed: [],
+    questProgress: { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 }
   };
 
   var state = clone(defaultState);
@@ -278,6 +301,29 @@
 
   function clone(v) {
     return JSON.parse(JSON.stringify(v));
+  }
+
+  function normalizeState() {
+    if (!state.battlePassClaimed || !Array.isArray(state.battlePassClaimed)) state.battlePassClaimed = [];
+    if (typeof state.battlePassXp !== 'number') state.battlePassXp = 0;
+    if (!state.questProgress || typeof state.questProgress !== 'object') {
+      state.questProgress = { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 };
+    }
+    if (typeof state.questProgress.clicks !== 'number') state.questProgress.clicks = 0;
+    if (typeof state.questProgress.upgradesBought !== 'number') state.questProgress.upgradesBought = 0;
+    if (typeof state.questProgress.minigamesPlayed !== 'number') state.questProgress.minigamesPlayed = 0;
+
+    for (var i = 0; i < BATTLE_PASS.rewards.length; i++) {
+      var reward = BATTLE_PASS.rewards[i];
+      if (reward.type !== 'skin') continue;
+      var skinId = ensureBattlePassSkin(reward);
+      if (state.battlePassClaimed.indexOf('bp_level_' + reward.level) >= 0 && state.skinsOwned.indexOf(skinId) < 0) {
+        state.skinsOwned.push(skinId);
+      }
+    }
+
+    var bpCap = BATTLE_PASS.maxLevel * BATTLE_PASS.xpPerLevel;
+    state.battlePassXp = Math.max(0, Math.min(bpCap, state.battlePassXp));
   }
 
   function upgradeCost(base, owned) {
@@ -307,6 +353,60 @@
     return 1000000 * Math.pow(3, state.rebirths);
   }
 
+  function battlePassLevel() {
+    return Math.min(BATTLE_PASS.maxLevel, Math.floor(state.battlePassXp / BATTLE_PASS.xpPerLevel));
+  }
+
+  function ensureBattlePassSkin(reward) {
+    if (!reward || !reward.skinFile) return null;
+    for (var i = 0; i < SKINS.length; i++) {
+      if (SKINS[i].file === reward.skinFile) return SKINS[i].id;
+    }
+    var id = 'bp_skin_' + reward.level;
+    SKINS.push({ id: id, name: reward.skinName || ('Battle Pass Skin ' + reward.level), file: reward.skinFile, mult: 1.12 + reward.level * 0.015, cost: 0 });
+    return id;
+  }
+
+  function claimBattlePassReward(reward) {
+    if (!reward) return;
+    if (reward.type === 'tims') {
+      state.tims += reward.amount;
+      return;
+    }
+    if (reward.type === 'rebirth') {
+      state.rebirths += reward.amount;
+      return;
+    }
+    if (reward.type === 'coin') {
+      var coinIds = Object.keys(COINS);
+      for (var i = 0; i < reward.amount; i++) {
+        var randomCoin = coinIds[Math.floor(Math.random() * coinIds.length)];
+        state.coinWallet[randomCoin] += 1;
+      }
+      return;
+    }
+    if (reward.type === 'skin') {
+      var skinId = ensureBattlePassSkin(reward);
+      if (skinId && state.skinsOwned.indexOf(skinId) < 0) state.skinsOwned.push(skinId);
+    }
+  }
+
+  function addQuestProgress(metric, amount) {
+    if (!state.questProgress[metric]) state.questProgress[metric] = 0;
+    state.questProgress[metric] += amount;
+    var grantedXp = 0;
+    for (var i = 0; i < BATTLE_PASS.quests.length; i++) {
+      var quest = BATTLE_PASS.quests[i];
+      var claimedKey = 'quest_' + quest.id;
+      if (quest.metric !== metric) continue;
+      if (state.questProgress[metric] >= quest.goal && state.battlePassClaimed.indexOf(claimedKey) < 0) {
+        state.battlePassClaimed.push(claimedKey);
+        grantedXp += quest.xp;
+      }
+    }
+    if (grantedXp > 0) state.battlePassXp = Math.min(BATTLE_PASS.maxLevel * BATTLE_PASS.xpPerLevel, state.battlePassXp + grantedXp);
+  }
+
   function saveLocal() {
     if (!saveAllowed) return;
     try {
@@ -319,8 +419,10 @@
     try {
       var raw = localStorage.getItem('tim_clicker_save_v2');
       if (raw) state = Object.assign(clone(defaultState), JSON.parse(raw));
+      normalizeState();
     } catch (err) {
       state = clone(defaultState);
+      normalizeState();
     }
   }
 
@@ -385,6 +487,7 @@
     userRefListener = function (snap) {
       if (!snap || !snap.exists()) return;
       state = Object.assign(clone(defaultState), snap.val());
+      normalizeState();
       applyActiveSkin();
       renderAll();
     };
@@ -464,6 +567,7 @@
           if (state.tims < price) return;
           state.tims -= price;
           state.upgrades[up.id] = owned + 1;
+          addQuestProgress('upgradesBought', 1);
           saveNow(true);
           renderAll();
         };
@@ -566,12 +670,60 @@
           state.tims -= game.cost;
           var win = Math.random() < game.winChance;
           if (win) state.tims += game.reward;
+          addQuestProgress('minigamesPlayed', 1);
           el('miniResult').textContent = win ? ('WIN +' + game.reward) : 'LOSE';
           saveNow(true);
           renderAll();
         };
         box.appendChild(btn);
       })(id);
+    }
+  }
+
+
+  function renderBattlePass() {
+    var summary = el('battlePassSummary');
+    var progressBar = el('battlePassProgress');
+    var rewardsBox = el('battlePassRewards');
+    var questBox = el('questList');
+    if (!summary || !progressBar || !rewardsBox || !questBox) return;
+
+    var level = battlePassLevel();
+    var xpInLevel = state.battlePassXp % BATTLE_PASS.xpPerLevel;
+    var width = level >= BATTLE_PASS.maxLevel ? 100 : Math.floor((xpInLevel / BATTLE_PASS.xpPerLevel) * 100);
+    summary.textContent = 'Level ' + level + ' / ' + BATTLE_PASS.maxLevel + ' • XP ' + state.battlePassXp + ' / ' + (BATTLE_PASS.maxLevel * BATTLE_PASS.xpPerLevel);
+    progressBar.style.width = width + '%';
+
+    rewardsBox.innerHTML = '';
+    for (var i = 0; i < BATTLE_PASS.rewards.length; i++) {
+      (function (reward) {
+        var key = 'bp_level_' + reward.level;
+        var claimed = state.battlePassClaimed.indexOf(key) >= 0;
+        var unlocked = level >= reward.level;
+        var btn = document.createElement('button');
+        btn.textContent = 'Lvl ' + reward.level + ': ' + reward.label + (claimed ? ' (claimed)' : unlocked ? ' (claim)' : ' (locked)');
+        btn.disabled = !unlocked || claimed;
+        btn.onclick = function () {
+          claimBattlePassReward(reward);
+          state.battlePassClaimed.push(key);
+          normalizeState();
+          saveNow(true);
+          renderAll();
+        };
+        rewardsBox.appendChild(btn);
+      })(BATTLE_PASS.rewards[i]);
+    }
+
+    questBox.innerHTML = '';
+    for (var j = 0; j < BATTLE_PASS.quests.length; j++) {
+      var quest = BATTLE_PASS.quests[j];
+      var questKey = 'quest_' + quest.id;
+      var progress = state.questProgress[quest.metric] || 0;
+      var questClaimed = state.battlePassClaimed.indexOf(questKey) >= 0;
+      var card = document.createElement('div');
+      card.className = 'quest-item';
+      card.innerHTML = '<b>' + quest.name + '</b><span>' + quest.description + '</span><span>' + Math.min(progress, quest.goal) + ' / ' + quest.goal + ' • ' + (questClaimed ? 'XP claimed' : '+' + quest.xp + ' XP') + '</span>';
+      questBox.appendChild(card);
     }
   }
 
@@ -620,11 +772,13 @@
     renderBackgrounds();
     renderMinigames();
     renderCrypto();
+    renderBattlePass();
   }
 
   // ---------- Events ----------
   el('timImage').onclick = function () {
     state.tims += (1 + state.rebirths * 0.25);
+    addQuestProgress('clicks', 1);
     saveNow();
     renderAll();
   };
@@ -661,6 +815,62 @@
   }, 100);
 
   // ---------- Boot ----------
+  function syncForUser(user) {
+    if (!user) return Promise.resolve();
+    uid = user.uid;
+    window.timClickerUid = uid;
+    setStatus('Firebase connected. UID: ' + uid);
+    return db.ref('users/' + uid).once('value').then(function (snap) {
+      if (snap && snap.exists()) state = Object.assign(clone(defaultState), snap.val());
+      normalizeState();
+      startRealtimeSync();
+      applyBackground();
+      applyActiveSkin();
+      renderAll();
+    });
+  }
+
+  function updateAuthUi(user) {
+    var authStatus = el('authStatus');
+    var logoutBtn = el('logoutBtn');
+    if (user) {
+      authStatus.textContent = 'Logged in as ' + (user.displayName || user.email || 'Guest');
+      logoutBtn.classList.remove('hidden');
+    } else {
+      authStatus.textContent = 'Not logged in. Use Google or continue as guest.';
+      logoutBtn.classList.add('hidden');
+    }
+  }
+
+  function bindAuthButtons() {
+    el('googleLoginBtn').onclick = function () {
+      if (!auth) return;
+      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function () {
+        setStatus('Google login failed. Check Firebase Auth provider settings.');
+      });
+    };
+
+    el('guestLoginBtn').onclick = function () {
+      if (!auth) return;
+      auth.signInAnonymously().catch(function () {
+        setStatus('Guest login failed.');
+      });
+    };
+
+    el('logoutBtn').onclick = function () {
+      if (!auth) return;
+      stopRealtimeSync();
+      auth.signOut().then(function () {
+        uid = null;
+        window.timClickerUid = null;
+        state = clone(defaultState);
+        normalizeState();
+        saveLocal();
+        renderAll();
+      });
+    };
+  }
+
   function initFirebaseAuth() {
     if (!saveAllowed) {
       setStatus('Saving declined. Nothing will be saved.');
@@ -675,67 +885,26 @@
     stopRealtimeSync();
     uid = null;
     window.timClickerUid = null;
-    var persistenceBlocked = false;
-
-    function syncForUser(user) {
-      if (!user) return Promise.resolve();
-      uid = user.uid;
-      window.timClickerUid = uid;
-      setStatus('Firebase connected. UID: ' + uid);
-      return db.ref('users/' + uid).once('value').then(function (snap) {
-        if (snap && snap.exists()) state = Object.assign(clone(defaultState), snap.val());
-        startRealtimeSync();
-      });
-    }
+    bindAuthButtons();
 
     return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
       .catch(function () {
-        persistenceBlocked = true;
-        return auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(function () {
-          return Promise.resolve();
-        });
+        return auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function () { return Promise.resolve(); });
       })
       .then(function () {
-        return new Promise(function (resolve) {
-          var done = false;
-          function finish() {
-            if (done) return;
-            done = true;
-            resolve();
+        auth.onAuthStateChanged(function (user) {
+          updateAuthUi(user);
+          if (!user) {
+            uid = null;
+            window.timClickerUid = null;
+            setStatus('Login required for cloud save.');
+            return;
           }
-
-          var unsubscribe = auth.onAuthStateChanged(function (user) {
-            unsubscribe();
-
-            if (user || auth.currentUser) {
-              syncForUser(user || auth.currentUser)
-                .then(finish)
-                .catch(function () {
-                  setStatus('Firebase sync failed. Using local save only.');
-                  finish();
-                });
-              return;
-            }
-
-            if (persistenceBlocked) {
-              setStatus('Firebase persistence blocked. Using local save only to avoid account churn.');
-              finish();
-              return;
-            }
-
-            auth.signInAnonymously()
-              .then(function (res) {
-                return syncForUser(res.user);
-              })
-              .then(finish)
-              .catch(function () {
-                setStatus('Firebase auth blocked. Playing without cloud save.');
-                finish();
-              });
-          }, function () {
-            setStatus('Firebase auth blocked. Playing without cloud save.');
-            finish();
+          syncForUser(user).catch(function () {
+            setStatus('Firebase sync failed. Using local state only.');
           });
+        }, function () {
+          setStatus('Firebase auth blocked.');
         });
       });
   }
@@ -743,6 +912,7 @@
   function boot() {
     applyBackground();
     applyActiveSkin();
+    normalizeState();
     var popup = el('cookiePopup');
 
     function openIfNamed() {
@@ -758,7 +928,9 @@
         saveAllowed = true;
         popup.classList.add('hidden');
         document.body.classList.remove('cookie-lock');
+        el('authPanel').classList.remove('hidden');
         loadLocal();
+        normalizeState();
         initFirebaseAuth().then(function () {
           applyActiveSkin();
           openIfNamed();
@@ -779,6 +951,7 @@
         window.timClickerUid = null;
         popup.classList.add('hidden');
         document.body.classList.remove('cookie-lock');
+        el('authPanel').classList.add('hidden');
         setStatus('Saving declined. Nothing will be saved (risk accepted).');
         applyActiveSkin();
         openIfNamed();
