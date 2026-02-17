@@ -104,6 +104,7 @@
     'assets/skins/Johnny_Tims.png',
     'assets/skins/Joker_Of_Tims.png',
     'assets/skins/Kartonnen_Doos.png',
+    'assets/skins/KirbTim.png'
     'assets/skins/Marble_Tim.png',
     'assets/skins/Mr._Timmah.png',
     'assets/skins/Neutronen_Tim.png',
@@ -114,6 +115,7 @@
     'assets/skins/Rat_Wizard_Tim.png',
     'assets/skins/Scout_Tim.png',
     'assets/skins/Solar_Tim.png',
+    'assets/skins/SuperTim.png'
     'assets/skins/TIM.png',
     'assets/skins/Terminal_Tim.png',
     'assets/skins/Tim_Driving_In_Car_Right_After_A_Beer.png',
