@@ -119,6 +119,7 @@
     'assets/skins/SisyTim.png',
     'assets/skins/Solar_Tim.png',
     'assets/skins/SuperTim.png',
+    'assets/skins/Tomer_Timsens.png'
     'assets/skins/TIM.png',
     'assets/skins/Terminal_Tim.png',
     'assets/skins/Tim_Driving_In_Car_Right_After_A_Beer.png',
@@ -129,7 +130,8 @@
     'assets/skins/TimoBama.png',
     'assets/skins/Timpy.png',
     'assets/skins/Timtoday.png',
-    'assets/skins/Timton_G_Timton.png'
+    'assets/skins/Timton_G_Timton.png',
+    'assets/skins/Tomer_Timsens.png'
   ];
 
   function prepareSkinCandidates(candidates) {
