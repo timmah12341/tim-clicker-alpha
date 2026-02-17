@@ -119,7 +119,7 @@
     'assets/skins/SisyTim.png',
     'assets/skins/Solar_Tim.png',
     'assets/skins/SuperTim.png',
-    'assets/skins/Tomer_Timsens.png'
+    'assets/skins/Tomer_Timsens.png',
     'assets/skins/TIM.png',
     'assets/skins/Terminal_Tim.png',
     'assets/skins/Tim_Driving_In_Car_Right_After_A_Beer.png',
@@ -292,7 +292,8 @@
     coinWallet: { JOHAN: 5, CHATGPT: 0, KIRB: 0 },
     battlePassXp: 0,
     battlePassClaimed: [],
-    questProgress: { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 }
+    questProgress: { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 },
+    questResetKey: ''
   };
 
   var state = clone(defaultState);
@@ -314,6 +315,7 @@
     if (typeof state.questProgress.clicks !== 'number') state.questProgress.clicks = 0;
     if (typeof state.questProgress.upgradesBought !== 'number') state.questProgress.upgradesBought = 0;
     if (typeof state.questProgress.minigamesPlayed !== 'number') state.questProgress.minigamesPlayed = 0;
+    if (typeof state.questResetKey !== 'string') state.questResetKey = '';
 
     for (var i = 0; i < BATTLE_PASS.rewards.length; i++) {
       var reward = BATTLE_PASS.rewards[i];
@@ -326,6 +328,40 @@
 
     var bpCap = BATTLE_PASS.maxLevel * BATTLE_PASS.xpPerLevel;
     state.battlePassXp = Math.max(0, Math.min(bpCap, state.battlePassXp));
+    if (!state.questResetKey) state.questResetKey = amsterdamDateKey();
+  }
+
+  function amsterdamDateKey() {
+    var parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Amsterdam',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date());
+    var year = '';
+    var month = '';
+    var day = '';
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].type === 'year') year = parts[i].value;
+      if (parts[i].type === 'month') month = parts[i].value;
+      if (parts[i].type === 'day') day = parts[i].value;
+    }
+    return year + '-' + month + '-' + day;
+  }
+
+  function resetDailyQuestsIfNeeded() {
+    var todayKey = amsterdamDateKey();
+    if (state.questResetKey === todayKey) return false;
+    state.questResetKey = todayKey;
+    state.questProgress = { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 };
+    state.battlePassClaimed = state.battlePassClaimed.filter(function (entry) {
+      return entry.indexOf('quest_') !== 0;
+    });
+    return true;
+  }
+
+  function isBattlePassSkin(skin) {
+    return !!skin && skin.id.indexOf('bp_skin_') === 0;
   }
 
   function upgradeCost(base, owned) {
@@ -394,6 +430,7 @@
   }
 
   function addQuestProgress(metric, amount) {
+    resetDailyQuestsIfNeeded();
     if (!state.questProgress[metric]) state.questProgress[metric] = 0;
     state.questProgress[metric] += amount;
     var grantedXp = 0;
@@ -584,11 +621,14 @@
     for (var i = 0; i < SKINS.length; i++) {
       (function (skin) {
         var owned = state.skinsOwned.indexOf(skin.id) >= 0;
+        var battlePassOnly = isBattlePassSkin(skin) && !owned;
         var btn = document.createElement('button');
         btn.className = 'skin-item';
         btn.innerHTML = '<img src="' + skin.file + '" alt="" onerror="this.style.display=\'none\'">' +
-          '<span>' + skin.name + (owned ? ' (owned)' : ' - ' + skin.cost) + '</span>';
+          '<span>' + skin.name + (owned ? ' (owned)' : battlePassOnly ? ' (battle pass reward)' : ' - ' + skin.cost) + '</span>';
+        btn.disabled = battlePassOnly;
         btn.onclick = function () {
+          if (battlePassOnly) return;
           if (!owned) {
             if (state.tims < skin.cost) return;
             state.tims -= skin.cost;
@@ -767,6 +807,7 @@
   }
 
   function renderAll() {
+    if (resetDailyQuestsIfNeeded()) saveNow(true);
     updateStats();
     renderUpgrades();
     renderSkins();
@@ -807,6 +848,11 @@
 
   // ---------- Loop ----------
   setInterval(function () {
+    if (resetDailyQuestsIfNeeded()) {
+      saveNow(true);
+      renderAll();
+      return;
+    }
     state.tims += cps() / 10;
     for (var id in COINS) {
       var swing = (Math.random() - 0.5) * COINS[id].vol;
