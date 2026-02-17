@@ -1,7 +1,7 @@
 :root {
   --bg: #0b1020;
-  --card: #141c31;
-  --line: #2b3b65;
+  --card: rgba(20, 28, 49, 0.5);
+  --line: rgba(43, 59, 101, 0.5);
   --text: #edf2ff;
   --muted: #a9b9e8;
   --accent: #6fa2ff;
@@ -67,7 +67,7 @@ input, button, select {
   padding: 10px;
   border-radius: 8px;
   border: 1px solid var(--line);
-  background: #0f1730;
+  background: rgba(15, 23, 48, 0.5);
   color: var(--text);
   margin: 6px 0;
 }
