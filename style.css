@@ -125,6 +125,12 @@ body.bg-cover {
   padding-right: 4px;
 }
 
+#skinShop {
+  max-height: 340px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
 .upgrade-item {
   display: flex;
   align-items: center;
