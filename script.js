@@ -267,7 +267,7 @@
     activeBg: 'dark',
     activeCoin: 'JOHAN',
     coinPrice: { JOHAN: 120, CHATGPT: 90, KIRB: 200 },
-    coinWallet: { JOHAN: 0, CHATGPT: 0, KIRB: 0 }
+    coinWallet: { JOHAN: 5, CHATGPT: 0, KIRB: 0 }
   };
 
   var state = clone(defaultState);
