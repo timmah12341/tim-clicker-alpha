@@ -881,6 +881,10 @@
   }
 
   function bindAuthButtons() {
+    function showGoogleAuthSetupHelp() {
+      setStatus('Google login failed. In Firebase Console: enable Authentication > Sign-in method > Google, add your site in Authentication > Settings > Authorized domains, and in Google Cloud Console enable Identity Toolkit API.');
+    }
+
     el('googleLoginBtn').onclick = function () {
       if (!auth) return;
       var provider = new firebase.auth.GoogleAuthProvider();
@@ -902,11 +906,11 @@
             ? currentUser.linkWithRedirect(provider)
             : auth.signInWithRedirect(provider);
           return redirectAttempt.catch(function () {
-            setStatus('Google login failed. Enable Google Auth and check authorized domains.');
+            showGoogleAuthSetupHelp();
           });
         }
 
-        setStatus('Google login failed. Enable Google Auth and check authorized domains.');
+        showGoogleAuthSetupHelp();
       });
     };
 
