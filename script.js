@@ -882,8 +882,31 @@
   }
 
   function bindAuthButtons() {
-    function showGoogleAuthSetupHelp() {
-      setStatus('Google login failed. In Firebase Console: enable Authentication > Sign-in method > Google, add your site in Authentication > Settings > Authorized domains, and in Google Cloud Console enable Identity Toolkit API.');
+    function showGoogleAuthError(err) {
+      var code = err && err.code ? err.code : '';
+      var base = 'Google login failed.';
+
+      if (code === 'auth/operation-not-allowed') {
+        setStatus(base + ' Google provider is disabled in Firebase Authentication > Sign-in method.');
+        return;
+      }
+
+      if (code === 'auth/unauthorized-domain') {
+        setStatus(base + ' Add this host to Firebase Authentication > Settings > Authorized domains.');
+        return;
+      }
+
+      if (code === 'auth/invalid-credential' || code === 'auth/invalid-oauth-client-id') {
+        setStatus(base + ' OAuth client setup looks invalid. Check Google provider config and OAuth consent screen in Google Cloud.');
+        return;
+      }
+
+      if (code === 'auth/account-exists-with-different-credential') {
+        setStatus(base + ' This email already uses another sign-in method. Sign in with that provider first, then link Google.');
+        return;
+      }
+
+      setStatus(base + ' In Firebase Console: enable Authentication > Sign-in method > Google, add your site in Authentication > Settings > Authorized domains, and in Google Cloud Console enable Identity Toolkit API.' + (code ? ' (Error: ' + code + ')' : ''));
     }
 
     el('googleLoginBtn').onclick = function () {
@@ -906,12 +929,12 @@
           var redirectAttempt = currentUser && currentUser.isAnonymous
             ? currentUser.linkWithRedirect(provider)
             : auth.signInWithRedirect(provider);
-          return redirectAttempt.catch(function () {
-            showGoogleAuthSetupHelp();
+          return redirectAttempt.catch(function (redirectErr) {
+            showGoogleAuthError(redirectErr);
           });
         }
 
-        showGoogleAuthSetupHelp();
+        showGoogleAuthError(err);
       });
     };
 

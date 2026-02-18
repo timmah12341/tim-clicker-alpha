@@ -21,3 +21,11 @@ If the Google sign-in popup is failing, double-check this order:
    - If app is in testing mode, add your Google account as a test user.
 
 If popup flow is blocked by browser settings, the app falls back to redirect login.
+
+## Common Firebase errors
+
+- **"The requested action is invalid."**
+  - Usually maps to `auth/operation-not-allowed`.
+  - Fix: enable **Google** under Firebase Console → Authentication → Sign-in method.
+- **`auth/unauthorized-domain`**
+  - Fix: add your current host to Authorized domains.
