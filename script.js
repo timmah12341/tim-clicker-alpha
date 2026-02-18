@@ -3,13 +3,14 @@
 
   // ---------- Firebase ----------
   var firebaseConfig = {};
-  firebaseConfig.apiKey = 'AIzaSyDleRW-O4yP9FJhuqQtMTVT0c_Dd1PPA98';
-  firebaseConfig.authDomain = 'tim-clicker-alpha.firebaseapp.com';
-  firebaseConfig.databaseURL = 'https://tim-clicker-alpha-default-rtdb.europe-west1.firebasedatabase.app';
-  firebaseConfig.projectId = 'tim-clicker-alpha';
-  firebaseConfig.storageBucket = 'tim-clicker-alpha.firebasestorage.app';
-  firebaseConfig.messagingSenderId = '40617780569';
-  firebaseConfig.appId = '1:40617780569:web:1a82146a3554ab1e365848';
+  firebaseConfig.apiKey = 'AIzaSyBZDGbuenDWIE8O0hjCa8h98n1os-8MZNs';
+  firebaseConfig.authDomain = 'tim-clicker.firebaseapp.com';
+  firebaseConfig.databaseURL = 'https://tim-clicker-default-rtdb.europe-west1.firebasedatabase.app';
+  firebaseConfig.projectId = 'tim-clicker';
+  firebaseConfig.storageBucket = 'tim-clicker.firebasestorage.app';
+  firebaseConfig.messagingSenderId = '493561136507';
+  firebaseConfig.appId = '1:493561136507:web:0a842da88e6a764624e9de';
+  firebaseConfig.measurementId = 'G-FTKCVMZH0Z';
 
   var firebaseReady = false;
   var auth = null;
@@ -17,6 +18,7 @@
   var uid = null;
   var saveAllowed = false;
   var CONSENT_KEY = 'tim_cookie_consent_v1';
+  var authStateUnsubscribe = null;
 
   try {
     if (window.firebase && !firebase.apps.length) {
@@ -25,6 +27,7 @@
     if (window.firebase) {
       auth = firebase.auth();
       db = firebase.database();
+      auth.useDeviceLanguage();
       firebaseReady = true;
     }
   } catch (err) {
@@ -880,8 +883,30 @@
   function bindAuthButtons() {
     el('googleLoginBtn').onclick = function () {
       if (!auth) return;
-      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function () {
-        setStatus('Google login failed. Check Firebase Auth provider settings.');
+      var provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      var currentUser = auth.currentUser;
+      var attempt = currentUser && currentUser.isAnonymous
+        ? currentUser.linkWithPopup(provider)
+        : auth.signInWithPopup(provider);
+
+      attempt.catch(function (err) {
+        var popupBlocked = err && (
+          err.code === 'auth/popup-blocked' ||
+          err.code === 'auth/popup-closed-by-user' ||
+          err.code === 'auth/cancelled-popup-request'
+        );
+
+        if (popupBlocked) {
+          var redirectAttempt = currentUser && currentUser.isAnonymous
+            ? currentUser.linkWithRedirect(provider)
+            : auth.signInWithRedirect(provider);
+          return redirectAttempt.catch(function () {
+            setStatus('Google login failed. Enable Google Auth and check authorized domains.');
+          });
+        }
+
+        setStatus('Google login failed. Enable Google Auth and check authorized domains.');
       });
     };
 
@@ -930,12 +955,20 @@
     window.timClickerUid = null;
     bindAuthButtons();
 
+    if (authStateUnsubscribe) {
+      authStateUnsubscribe();
+      authStateUnsubscribe = null;
+    }
+
     return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
       .catch(function () {
         return auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function () { return Promise.resolve(); });
       })
       .then(function () {
-        auth.onAuthStateChanged(function (user) {
+        return auth.getRedirectResult().catch(function () { return null; });
+      })
+      .then(function () {
+        authStateUnsubscribe = auth.onAuthStateChanged(function (user) {
           updateAuthUi(user);
           if (!user) {
             uid = null;
