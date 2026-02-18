@@ -83,7 +83,10 @@
     { id: 'u41', name: '6 laws of quantum physics', baseCost: 50000000000000000000000, add: 100000000000000000000, icon: 'upgrade40.png' },
     { id: 'u42', name: 'Weapon of Mosquito Destruction', baseCost: 100000000000000000000000, add: 500000000000000000000, icon: 'upgrade41.png' },
     { id: 'u43', name: 'P-A', baseCost: 500000000000000000000000, add: 1000000000000000000000, icon: 'assets/upgrades/P-A.png' },
-    { id: 'u44', name: 'G-T', baseCost: 1000000000000000000000000, add: 5000000000000000000000, icon: 'assets/upgrades/G-T.png' }
+    { id: 'u44', name: 'G-T', baseCost: 1000000000000000000000000, add: 5000000000000000000000, icon: 'assets/upgrades/G-T.png' },
+    { id: 'u45', name: 'Le Beter Click', baseCost: 2200000, add: 0, mult: 1.2, icon: 'upgrade7.png' },
+    { id: 'u46', name: 'golden ratio', baseCost: 9100000, add: 0, mult: 1.61803398875, icon: 'golden.png' },
+    { id: 'u47', name: 'Clone', baseCost: 45000000, add: 0, mult: 2, maxOwned: 1, icon: 'upgrade41.png' }
   ];
   var UPGRADES = upgrades;
 
@@ -248,7 +251,13 @@
 
   var MINIGAMES = {
     coinflip: { name: 'Coin Flip', cost: 100, reward: 220, winChance: 0.5 },
-    fish: { name: 'Fish Minigame', cost: 300, reward: 900, winChance: 0.38 }
+    fish: { name: 'Fish Minigame', cost: 300, reward: 900, winChance: 0.38 },
+    timtris: { name: 'Timtris (Tim Tetris)', cost: 600, reward: 2100, winChance: 0.36 },
+    candycrush: { name: 'C-C-C-CANDY CRUSH', cost: 800, reward: 2600, winChance: 0.34 },
+    basketball: { name: '🏀 Hoop Shot', cost: 500, reward: 1700, winChance: 0.4 },
+    koopacrunch: { name: 'Koopa Crunch', cost: 1200, reward: 4200, winChance: 0.3 },
+    subway: { name: 'Subway Surfers mode', cost: 1600, reward: 5600, winChance: 0.27 },
+    slotmachine: { name: 'Slot machine', cost: 1000, reward: 3500, winChance: 0.32 }
   };
 
   var COINS = {
@@ -377,10 +386,14 @@
 
   function cps() {
     var total = 0;
+    var multiplier = 1;
     for (var i = 0; i < UPGRADES.length; i++) {
       var up = UPGRADES[i];
-      total += (state.upgrades[up.id] || 0) * up.add;
+      var owned = state.upgrades[up.id] || 0;
+      total += owned * (up.add || 0);
+      if (up.mult) multiplier *= Math.pow(up.mult, owned);
     }
+    total *= multiplier;
     total *= currentSkin().mult;
     total *= (1 + state.rebirths * 0.25);
     total *= 1;
@@ -598,11 +611,14 @@
       (function (up) {
         var owned = state.upgrades[up.id] || 0;
         var price = upgradeCost(up.baseCost, owned);
+        var soldOut = typeof up.maxOwned === 'number' && owned >= up.maxOwned;
         var btn = document.createElement('button');
         btn.className = 'upgrade-item';
         btn.innerHTML = '<img src="' + up.icon + '" alt="" data-icon="' + up.icon.replace('assets/upgrades/', '') + '" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=\'assets/upgrades/\'+this.dataset.icon;}else{this.style.display=\'none\';}">' +
-          '<span>' + up.name + ' (' + owned + ') - ' + price + '</span>';
+          '<span>' + up.name + ' (' + owned + ')' + (soldOut ? ' - SOLD OUT' : ' - ' + price) + '</span>';
+        btn.disabled = soldOut;
         btn.onclick = function () {
+          if (soldOut) return;
           if (state.tims < price) return;
           state.tims -= price;
           state.upgrades[up.id] = owned + 1;
@@ -820,7 +836,10 @@
 
   // ---------- Events ----------
   el('timImage').onclick = function () {
-    state.tims += (1 + state.rebirths * 0.25);
+    var clickBonus = 1 + state.rebirths * 0.25;
+    var beterOwned = state.upgrades.u45 || 0;
+    if (beterOwned > 0) clickBonus += cps() * 0.2 * beterOwned;
+    state.tims += clickBonus;
     addQuestProgress('clicks', 1);
     saveNow();
     renderAll();
