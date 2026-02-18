@@ -386,18 +386,26 @@
 
   function cps() {
     var total = 0;
-    var multiplier = 1;
     for (var i = 0; i < UPGRADES.length; i++) {
       var up = UPGRADES[i];
       var owned = state.upgrades[up.id] || 0;
       total += owned * (up.add || 0);
-      if (up.mult) multiplier *= Math.pow(up.mult, owned);
     }
-    total *= multiplier;
-    total *= currentSkin().mult;
-    total *= (1 + state.rebirths * 0.25);
+    total *= totalMultiplier();
     total *= 1;
     return total;
+  }
+
+  function totalMultiplier() {
+    var multiplier = 1;
+    for (var i = 0; i < UPGRADES.length; i++) {
+      var up = UPGRADES[i];
+      var owned = state.upgrades[up.id] || 0;
+      if (up.mult) multiplier *= Math.pow(up.mult, owned);
+    }
+    multiplier *= currentSkin().mult;
+    multiplier *= (1 + state.rebirths * 0.25);
+    return multiplier;
   }
 
   function rebirthCost() {
@@ -598,6 +606,7 @@
     el('playerName').textContent = state.name;
     el('tims').textContent = Math.floor(state.tims);
     el('cps').textContent = cps().toFixed(1);
+    el('multi').textContent = 'x' + totalMultiplier().toFixed(2);
     el('rebirths').textContent = state.rebirths;
     el('rebirthBtn').textContent = 'Rebirth (' + Math.floor(needed) + ')';
     el('coinPrice').textContent = state.coinPrice[coinId].toFixed(1);
@@ -900,12 +909,16 @@
   function updateAuthUi(user) {
     var authStatus = el('authStatus');
     var logoutBtn = el('logoutBtn');
+    var renamePanel = el('renamePanel');
     if (user) {
       authStatus.textContent = 'Logged in as ' + (user.displayName || user.email || 'Guest');
       logoutBtn.classList.remove('hidden');
+      renamePanel.classList.remove('hidden');
+      el('renameInput').value = state.name || '';
     } else {
       authStatus.textContent = 'Not logged in. Use Google or continue as guest.';
       logoutBtn.classList.add('hidden');
+      renamePanel.classList.add('hidden');
     }
   }
 
@@ -935,6 +948,15 @@
         saveLocal();
         renderAll();
       });
+    };
+
+    el('renameBtn').onclick = function () {
+      var newName = el('renameInput').value.trim();
+      if (!newName) return;
+      state.name = newName;
+      el('nameInput').value = newName;
+      saveNow(true);
+      renderAll();
     };
   }
 
