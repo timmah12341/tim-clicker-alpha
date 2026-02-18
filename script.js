@@ -467,51 +467,16 @@
     if (grantedXp > 0) state.battlePassXp = Math.min(BATTLE_PASS.maxLevel * BATTLE_PASS.xpPerLevel, state.battlePassXp + grantedXp);
   }
 
-  function saveLocal() {
-    if (!saveAllowed) return;
-    try {
-      localStorage.setItem('tim_clicker_save_v2', JSON.stringify(state));
-    } catch (err) {}
-  }
-
-  function loadLocal() {
-    if (!saveAllowed) return;
-    try {
-      var raw = localStorage.getItem('tim_clicker_save_v2');
-      if (raw) state = Object.assign(clone(defaultState), JSON.parse(raw));
-      normalizeState();
-    } catch (err) {
-      state = clone(defaultState);
-      normalizeState();
-    }
-  }
 
   var lastStatus = '';
   var lastRemoteSaveAt = 0;
   var userRef = null;
   var userRefListener = null;
 
-  function readCookie(name) {
-    var prefix = name + '=';
-    var parts = document.cookie ? document.cookie.split(';') : [];
-    for (var i = 0; i < parts.length; i++) {
-      var part = parts[i].trim();
-      if (part.indexOf(prefix) === 0) return decodeURIComponent(part.slice(prefix.length));
-    }
-    return null;
-  }
-
-  function mirrorConsentCookie(value) {
-    try {
-      document.cookie = CONSENT_KEY + '=' + encodeURIComponent(value) + '; Max-Age=31536000; Path=/; SameSite=Lax';
-    } catch (err) {}
-  }
-
   function storeConsent(value) {
     try {
       localStorage.setItem(CONSENT_KEY, value);
     } catch (err) {}
-    mirrorConsentCookie(value);
   }
 
   function readConsent() {
@@ -519,15 +484,6 @@
     try {
       value = localStorage.getItem(CONSENT_KEY);
     } catch (err) {}
-
-    if (value !== 'accepted' && value !== 'declined') {
-      value = readCookie(CONSENT_KEY);
-      if (value === 'accepted' || value === 'declined') {
-        try {
-          localStorage.setItem(CONSENT_KEY, value);
-        } catch (err) {}
-      }
-    }
 
     if (value === 'accepted' || value === 'declined') return value;
     return null;
@@ -568,7 +524,6 @@
   }
 
   function saveNow(forceRemote) {
-    saveLocal();
     saveRemote(!!forceRemote);
   }
 
@@ -945,7 +900,6 @@
         window.timClickerUid = null;
         state = clone(defaultState);
         normalizeState();
-        saveLocal();
         renderAll();
       });
     };
@@ -967,7 +921,7 @@
     }
 
     if (!firebaseReady || !auth || !db) {
-      setStatus('Firebase offline, local save enabled.');
+      setStatus('Firebase offline. Guest save requires Firebase login.');
       return Promise.resolve();
     }
 
@@ -986,11 +940,11 @@
           if (!user) {
             uid = null;
             window.timClickerUid = null;
-            setStatus('Login required for cloud save.');
+            setStatus('Login required. Guest save is stored in Firebase by UID only.');
             return;
           }
           syncForUser(user).catch(function () {
-            setStatus('Firebase sync failed. Using local state only.');
+            setStatus('Firebase sync failed. Progress could not be saved.');
           });
         }, function () {
           setStatus('Firebase auth blocked.');
@@ -1018,14 +972,12 @@
         popup.classList.add('hidden');
         document.body.classList.remove('cookie-lock');
         el('authPanel').classList.remove('hidden');
-        loadLocal();
-        normalizeState();
         initFirebaseAuth().then(function () {
           applyActiveSkin();
           openIfNamed();
           renderAll();
         }).catch(function () {
-          setStatus('Firebase init failed. Playing with local state only.');
+          setStatus('Firebase init failed. Progress could not be saved.');
           applyActiveSkin();
           openIfNamed();
           renderAll();
