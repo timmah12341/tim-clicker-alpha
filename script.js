@@ -98,6 +98,7 @@
   var skinCandidates = [
     'assets/skins/default.png',
     'assets/skins/AMONG_US.png',
+    'assets/skins/Absolute_Tim-ema.png',
     'assets/skins/Assasin_Tim.png',
     'assets/skins/B.T.S._Tim.png',
     'assets/skins/Baby_Tim.png',
