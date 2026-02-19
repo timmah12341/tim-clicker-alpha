@@ -19,23 +19,53 @@
   var saveAllowed = false;
   var CONSENT_KEY = 'tim_cookie_consent_v1';
   var authStateUnsubscribe = null;
+  var firebaseReferrerBlocked = false;
+  var firebaseReferrerChecked = false;
+
+  function checkApiKeyReferrerAccess() {
+    if (firebaseReferrerChecked) return Promise.resolve(!firebaseReferrerBlocked);
+    firebaseReferrerChecked = true;
+
+    var url = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=' + encodeURIComponent(firebaseConfig.apiKey);
+    return fetch(url, { method: 'GET', mode: 'cors', cache: 'no-store' })
+      .then(function (resp) {
+        if (resp.ok) return true;
+        return resp.text().then(function (txt) {
+          var lower = (txt || '').toLowerCase();
+          if (resp.status === 403 && (lower.indexOf('api_key_http_referrer_blocked') >= 0 || lower.indexOf('requests from referer') >= 0)) {
+            firebaseReferrerBlocked = true;
+            return false;
+          }
+          return true;
+        }).catch(function () {
+          return resp.status !== 403;
+        });
+      })
+      .catch(function () {
+        return true;
+      });
+  }
 
   function ensureFirebaseReady() {
-    if (firebaseReady && auth && db) return true;
-    try {
-      if (window.firebase && !firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+    if (firebaseReady && auth && db) return Promise.resolve(true);
+
+    return checkApiKeyReferrerAccess().then(function (allowed) {
+      if (!allowed) return false;
+      try {
+        if (window.firebase && !firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        if (window.firebase) {
+          auth = firebase.auth();
+          db = firebase.database();
+          auth.useDeviceLanguage();
+          firebaseReady = true;
+        }
+      } catch (err) {
+        firebaseReady = false;
       }
-      if (window.firebase) {
-        auth = firebase.auth();
-        db = firebase.database();
-        auth.useDeviceLanguage();
-        firebaseReady = true;
-      }
-    } catch (err) {
-      firebaseReady = false;
-    }
-    return firebaseReady && !!auth && !!db;
+      return firebaseReady && !!auth && !!db;
+    });
   }
 
   // ---------- Data ----------
@@ -991,12 +1021,17 @@
       return Promise.resolve();
     }
 
-    if (!ensureFirebaseReady()) {
-      setStatus('Firebase offline. Guest save requires Firebase login.');
-      return Promise.resolve();
-    }
+    return ensureFirebaseReady().then(function (ready) {
+      if (!ready) {
+        if (firebaseReferrerBlocked) {
+          setStatus('Firebase API key blocked for this host. Update Google Cloud API key HTTP referrer allowlist.');
+        } else {
+          setStatus('Firebase offline. Guest save requires Firebase login.');
+        }
+        return;
+      }
 
-    stopRealtimeSync();
+      stopRealtimeSync();
     uid = null;
     window.timClickerUid = null;
     bindAuthButtons();
@@ -1006,7 +1041,7 @@
       authStateUnsubscribe = null;
     }
 
-    return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
       .catch(function () {
         return auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function () { return Promise.resolve(); });
       })
@@ -1029,6 +1064,7 @@
           setStatus('Firebase auth blocked.');
         });
       });
+    });
   }
 
   function boot() {
