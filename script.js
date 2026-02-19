@@ -20,18 +20,22 @@
   var CONSENT_KEY = 'tim_cookie_consent_v1';
   var authStateUnsubscribe = null;
 
-  try {
-    if (window.firebase && !firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
+  function ensureFirebaseReady() {
+    if (firebaseReady && auth && db) return true;
+    try {
+      if (window.firebase && !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      if (window.firebase) {
+        auth = firebase.auth();
+        db = firebase.database();
+        auth.useDeviceLanguage();
+        firebaseReady = true;
+      }
+    } catch (err) {
+      firebaseReady = false;
     }
-    if (window.firebase) {
-      auth = firebase.auth();
-      db = firebase.database();
-      auth.useDeviceLanguage();
-      firebaseReady = true;
-    }
-  } catch (err) {
-    firebaseReady = false;
+    return firebaseReady && !!auth && !!db;
   }
 
   // ---------- Data ----------
@@ -882,9 +886,22 @@
   }
 
   function bindAuthButtons() {
+    function showApiKeyReferrerBlockedMessage(err) {
+      var msg = (err && err.message ? err.message : '').toLowerCase();
+      if (msg.indexOf('api_key_http_referrer_blocked') >= 0 || msg.indexOf('requests from referer') >= 0) {
+        setStatus('Firebase API key blocked for this host. In Google Cloud Console, allow this site URL under API key HTTP referrers.');
+        return true;
+      }
+      return false;
+    }
+
     function showGoogleAuthError(err) {
       var code = err && err.code ? err.code : '';
       var base = 'Google login failed.';
+
+      if (showApiKeyReferrerBlockedMessage(err)) {
+        return;
+      }
 
       if (code === 'auth/operation-not-allowed') {
         setStatus(base + ' Google provider is disabled in Firebase Authentication > Sign-in method.');
@@ -940,7 +957,8 @@
 
     el('guestLoginBtn').onclick = function () {
       if (!auth) return;
-      auth.signInAnonymously().catch(function () {
+      auth.signInAnonymously().catch(function (err) {
+        if (showApiKeyReferrerBlockedMessage(err)) return;
         setStatus('Guest login failed.');
       });
     };
@@ -973,7 +991,7 @@
       return Promise.resolve();
     }
 
-    if (!firebaseReady || !auth || !db) {
+    if (!ensureFirebaseReady()) {
       setStatus('Firebase offline. Guest save requires Firebase login.');
       return Promise.resolve();
     }
