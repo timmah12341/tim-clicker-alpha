@@ -416,10 +416,20 @@
   }
 
   function currentSkin() {
+    var fallbackSkin = {
+      id: 'skin_1',
+      name: 'Default',
+      file: skinFallbackPool[0] || 'assets/skins/default.png',
+      mult: 1,
+      cost: 0
+    };
+
+    if (!SKINS || SKINS.length === 0) return fallbackSkin;
+
     for (var i = 0; i < SKINS.length; i++) {
       if (SKINS[i].id === state.activeSkin) return SKINS[i];
     }
-    return SKINS[0];
+    return SKINS[0] || fallbackSkin;
   }
 
   function cps() {
