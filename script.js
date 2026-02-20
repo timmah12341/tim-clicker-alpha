@@ -927,6 +927,7 @@
 
     function showGoogleAuthError(err) {
       var code = err && err.code ? err.code : '';
+      var msg = err && err.message ? err.message.toLowerCase() : '';
       var base = 'Google login failed.';
 
       if (showApiKeyReferrerBlockedMessage(err)) {
@@ -938,6 +939,15 @@
         return;
       }
 
+      if (
+        code === 'auth/invalid-action-code' ||
+        msg.indexOf('requested action is invalid') >= 0 ||
+        msg.indexOf('request is invalid') >= 0
+      ) {
+        setStatus(base + ' Firebase rejected this OAuth request as invalid. In Firebase Authentication > Sign-in method > Google, verify the Web SDK configuration uses this same Firebase project and re-save the Google provider settings.');
+        return;
+      }
+
       if (code === 'auth/unauthorized-domain') {
         setStatus(base + ' Add this host to Firebase Authentication > Settings > Authorized domains.');
         return;
@@ -945,6 +955,11 @@
 
       if (code === 'auth/invalid-credential' || code === 'auth/invalid-oauth-client-id') {
         setStatus(base + ' OAuth client setup looks invalid. Check Google provider config and OAuth consent screen in Google Cloud.');
+        return;
+      }
+
+      if (code === 'auth/internal-error' && msg.indexOf('invalid') >= 0) {
+        setStatus(base + ' Google OAuth settings appear mismatched. Confirm this site is using the Firebase config from the same project where Google sign-in is enabled.');
         return;
       }
 
@@ -1046,7 +1061,10 @@
         return auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function () { return Promise.resolve(); });
       })
       .then(function () {
-        return auth.getRedirectResult().catch(function () { return null; });
+        return auth.getRedirectResult().catch(function (err) {
+          showGoogleAuthError(err);
+          return null;
+        });
       })
       .then(function () {
         authStateUnsubscribe = auth.onAuthStateChanged(function (user) {
