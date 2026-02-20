@@ -427,9 +427,16 @@
     if (!SKINS || SKINS.length === 0) return fallbackSkin;
 
     for (var i = 0; i < SKINS.length; i++) {
-      if (SKINS[i].id === state.activeSkin) return SKINS[i];
+      var skin = SKINS[i];
+      if (!skin) continue;
+      if (skin.id === state.activeSkin) return skin;
     }
-    return SKINS[0] || fallbackSkin;
+
+    for (var j = 0; j < SKINS.length; j++) {
+      if (SKINS[j]) return SKINS[j];
+    }
+
+    return fallbackSkin;
   }
 
   function cps() {
@@ -451,7 +458,9 @@
       var owned = state.upgrades[up.id] || 0;
       if (up.mult) multiplier *= Math.pow(up.mult, owned);
     }
-    multiplier *= currentSkin().mult;
+    var skin = currentSkin();
+    var skinMultiplier = skin && typeof skin.mult === 'number' ? skin.mult : 1;
+    multiplier *= skinMultiplier;
     multiplier *= (1 + state.rebirths * 0.25);
     return multiplier;
   }
