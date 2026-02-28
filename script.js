@@ -935,6 +935,16 @@
   }
 
   function bindAuthButtons() {
+    function isInvalidOAuthRequestError(err) {
+      var code = err && err.code ? err.code : '';
+      var msg = err && err.message ? err.message.toLowerCase() : '';
+      return (
+        code === 'auth/invalid-action-code' ||
+        msg.indexOf('requested action is invalid') >= 0 ||
+        msg.indexOf('request is invalid') >= 0
+      );
+    }
+
     function showApiKeyReferrerBlockedMessage(err) {
       var msg = (err && err.message ? err.message : '').toLowerCase();
       if (msg.indexOf('api_key_http_referrer_blocked') >= 0 || msg.indexOf('requests from referer') >= 0) {
@@ -958,11 +968,7 @@
         return;
       }
 
-      if (
-        code === 'auth/invalid-action-code' ||
-        msg.indexOf('requested action is invalid') >= 0 ||
-        msg.indexOf('request is invalid') >= 0
-      ) {
+      if (isInvalidOAuthRequestError(err)) {
         setStatus(base + ' Firebase rejected this OAuth request as invalid. In Firebase Authentication > Sign-in method > Google, verify the Web SDK configuration uses this same Firebase project and re-save the Google provider settings.');
         return;
       }
@@ -995,9 +1001,22 @@
       var provider = new firebase.auth.GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
       var currentUser = auth.currentUser;
-      var attempt = currentUser && currentUser.isAnonymous
-        ? currentUser.linkWithPopup(provider)
-        : auth.signInWithPopup(provider);
+      var shouldLinkAnonymous = currentUser && currentUser.isAnonymous;
+
+      function signInWithPopupAttempt() {
+        return shouldLinkAnonymous ? currentUser.linkWithPopup(provider) : auth.signInWithPopup(provider);
+      }
+
+      function signInWithRedirectAttempt() {
+        return shouldLinkAnonymous ? currentUser.linkWithRedirect(provider) : auth.signInWithRedirect(provider);
+      }
+
+      var attempt = signInWithPopupAttempt().catch(function (err) {
+        if (shouldLinkAnonymous && isInvalidOAuthRequestError(err)) {
+          return auth.signInWithPopup(provider);
+        }
+        return Promise.reject(err);
+      });
 
       attempt.catch(function (err) {
         var popupBlocked = err && (
@@ -1007,9 +1026,12 @@
         );
 
         if (popupBlocked) {
-          var redirectAttempt = currentUser && currentUser.isAnonymous
-            ? currentUser.linkWithRedirect(provider)
-            : auth.signInWithRedirect(provider);
+          var redirectAttempt = signInWithRedirectAttempt().catch(function (redirectErr) {
+            if (shouldLinkAnonymous && isInvalidOAuthRequestError(redirectErr)) {
+              return auth.signInWithRedirect(provider);
+            }
+            return Promise.reject(redirectErr);
+          });
           return redirectAttempt.catch(function (redirectErr) {
             showGoogleAuthError(redirectErr);
           });
