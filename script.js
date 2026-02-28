@@ -22,6 +22,22 @@
   var firebaseReferrerBlocked = false;
   var firebaseReferrerChecked = false;
 
+  function hasOauthRedirectParams() {
+    var haystack = ((window.location.search || '') + '&' + (window.location.hash || '')).toLowerCase();
+    return (
+      haystack.indexOf('code=') >= 0 ||
+      haystack.indexOf('oauth') >= 0 ||
+      haystack.indexOf('access_token=') >= 0 ||
+      haystack.indexOf('id_token=') >= 0 ||
+      haystack.indexOf('firebaseerror=') >= 0
+    );
+  }
+
+  function isApiKeyReferrerBlockedError(err) {
+    var msg = (err && err.message ? err.message : '').toLowerCase();
+    return msg.indexOf('api_key_http_referrer_blocked') >= 0 || msg.indexOf('requests from referer') >= 0;
+  }
+
   function checkApiKeyReferrerAccess() {
     if (firebaseReferrerChecked) return Promise.resolve(!firebaseReferrerBlocked);
     firebaseReferrerChecked = true;
@@ -946,8 +962,7 @@
     }
 
     function showApiKeyReferrerBlockedMessage(err) {
-      var msg = (err && err.message ? err.message : '').toLowerCase();
-      if (msg.indexOf('api_key_http_referrer_blocked') >= 0 || msg.indexOf('requests from referer') >= 0) {
+      if (isApiKeyReferrerBlockedError(err)) {
         setStatus('Firebase API key blocked for this host. In Google Cloud Console, allow this site URL under API key HTTP referrers.');
         return true;
       }
@@ -1102,7 +1117,11 @@
         return auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function () { return Promise.resolve(); });
       })
       .then(function () {
+        if (!hasOauthRedirectParams()) return null;
         return auth.getRedirectResult().catch(function (err) {
+          if (isApiKeyReferrerBlockedError(err)) {
+            firebaseReferrerBlocked = true;
+          }
           showGoogleAuthError(err);
           return null;
         });
