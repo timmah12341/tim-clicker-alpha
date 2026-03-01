@@ -944,23 +944,13 @@
       renamePanel.classList.remove('hidden');
       el('renameInput').value = state.name || '';
     } else {
-      authStatus.textContent = 'Not logged in. Use Google or continue as guest.';
+      authStatus.textContent = 'Not logged in. Use email/password or continue as guest.';
       logoutBtn.classList.add('hidden');
       renamePanel.classList.add('hidden');
     }
   }
 
   function bindAuthButtons() {
-    function isInvalidOAuthRequestError(err) {
-      var code = err && err.code ? err.code : '';
-      var msg = err && err.message ? err.message.toLowerCase() : '';
-      return (
-        code === 'auth/invalid-action-code' ||
-        msg.indexOf('requested action is invalid') >= 0 ||
-        msg.indexOf('request is invalid') >= 0
-      );
-    }
-
     function showApiKeyReferrerBlockedMessage(err) {
       if (isApiKeyReferrerBlockedError(err)) {
         setStatus('Firebase API key blocked for this host. In Google Cloud Console, allow this site URL under API key HTTP referrers.');
@@ -969,90 +959,62 @@
       return false;
     }
 
-    function showGoogleAuthError(err) {
+    function showEmailAuthError(err) {
       var code = err && err.code ? err.code : '';
-      var msg = err && err.message ? err.message.toLowerCase() : '';
-      var base = 'Google login failed.';
+      var base = 'Email/password login failed.';
 
       if (showApiKeyReferrerBlockedMessage(err)) {
         return;
       }
 
       if (code === 'auth/operation-not-allowed') {
-        setStatus(base + ' Google provider is disabled in Firebase Authentication > Sign-in method.');
+        setStatus(base + ' Email/Password provider is disabled in Firebase Authentication > Sign-in method.');
         return;
       }
 
-      if (isInvalidOAuthRequestError(err)) {
-        setStatus(base + ' Firebase rejected this OAuth request as invalid. In Firebase Authentication > Sign-in method > Google, verify the Web SDK configuration uses this same Firebase project and re-save the Google provider settings.');
+      if (code === 'auth/invalid-email') {
+        setStatus(base + ' Enter a valid email address.');
         return;
       }
 
-      if (code === 'auth/unauthorized-domain') {
-        setStatus(base + ' Add this host to Firebase Authentication > Settings > Authorized domains.');
+      if (code === 'auth/missing-password' || code === 'auth/weak-password') {
+        setStatus(base + ' Password must be at least 6 characters.');
         return;
       }
 
-      if (code === 'auth/invalid-credential' || code === 'auth/invalid-oauth-client-id') {
-        setStatus(base + ' OAuth client setup looks invalid. Check Google provider config and OAuth consent screen in Google Cloud.');
+      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        setStatus(base + ' Incorrect email or password.');
         return;
       }
 
-      if (code === 'auth/internal-error' && msg.indexOf('invalid') >= 0) {
-        setStatus(base + ' Google OAuth settings appear mismatched. Confirm this site is using the Firebase config from the same project where Google sign-in is enabled.');
+      if (code === 'auth/user-disabled') {
+        setStatus(base + ' This account has been disabled.');
         return;
       }
 
-      if (code === 'auth/account-exists-with-different-credential') {
-        setStatus(base + ' This email already uses another sign-in method. Sign in with that provider first, then link Google.');
+      if (code === 'auth/too-many-requests') {
+        setStatus(base + ' Too many attempts. Please wait and try again.');
         return;
       }
 
-      setStatus(base + ' In Firebase Console: enable Authentication > Sign-in method > Google, add your site in Authentication > Settings > Authorized domains, and in Google Cloud Console enable Identity Toolkit API.' + (code ? ' (Error: ' + code + ')' : ''));
+      setStatus(base + (code ? ' (Error: ' + code + ')' : ''));
     }
 
-    el('googleLoginBtn').onclick = function () {
+    el('emailLoginBtn').onclick = function () {
       if (!auth) return;
-      var provider = new firebase.auth.GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      var currentUser = auth.currentUser;
-      var shouldLinkAnonymous = currentUser && currentUser.isAnonymous;
-
-      function signInWithPopupAttempt() {
-        return shouldLinkAnonymous ? currentUser.linkWithPopup(provider) : auth.signInWithPopup(provider);
+      var email = el('emailLoginInput').value.trim();
+      var password = el('passwordLoginInput').value;
+      if (!email || !password) {
+        setStatus('Enter both email and password.');
+        return;
       }
-
-      function signInWithRedirectAttempt() {
-        return shouldLinkAnonymous ? currentUser.linkWithRedirect(provider) : auth.signInWithRedirect(provider);
-      }
-
-      var attempt = signInWithPopupAttempt().catch(function (err) {
-        if (shouldLinkAnonymous && isInvalidOAuthRequestError(err)) {
-          return auth.signInWithPopup(provider);
-        }
-        return Promise.reject(err);
-      });
-
-      attempt.catch(function (err) {
-        var popupBlocked = err && (
-          err.code === 'auth/popup-blocked' ||
-          err.code === 'auth/popup-closed-by-user' ||
-          err.code === 'auth/cancelled-popup-request'
-        );
-
-        if (popupBlocked) {
-          var redirectAttempt = signInWithRedirectAttempt().catch(function (redirectErr) {
-            if (shouldLinkAnonymous && isInvalidOAuthRequestError(redirectErr)) {
-              return auth.signInWithRedirect(provider);
-            }
-            return Promise.reject(redirectErr);
-          });
-          return redirectAttempt.catch(function (redirectErr) {
-            showGoogleAuthError(redirectErr);
+      auth.signInWithEmailAndPassword(email, password).catch(function (err) {
+        if (err && err.code === 'auth/user-not-found') {
+          return auth.createUserWithEmailAndPassword(email, password).catch(function (createErr) {
+            showEmailAuthError(createErr);
           });
         }
-
-        showGoogleAuthError(err);
+        showEmailAuthError(err);
       });
     };
 
@@ -1122,7 +1084,7 @@
           if (isApiKeyReferrerBlockedError(err)) {
             firebaseReferrerBlocked = true;
           }
-          showGoogleAuthError(err);
+          setStatus('Login failed while restoring previous session.');
           return null;
         });
       })
