@@ -959,62 +959,82 @@
       return false;
     }
 
-    function showEmailAuthError(err) {
+    function showEmailAuthError(err, mode) {
       var code = err && err.code ? err.code : '';
-      var base = 'Email/password login failed.';
+      var action = mode === 'signup' ? 'Sign up' : 'Login';
 
       if (showApiKeyReferrerBlockedMessage(err)) {
         return;
       }
 
       if (code === 'auth/operation-not-allowed') {
-        setStatus(base + ' Email/Password provider is disabled in Firebase Authentication > Sign-in method.');
+        setStatus(action + ' failed. Email/Password provider is disabled in Firebase Authentication > Sign-in method.');
         return;
       }
 
       if (code === 'auth/invalid-email') {
-        setStatus(base + ' Enter a valid email address.');
+        setStatus(action + ' failed. Enter a valid email address.');
         return;
       }
 
       if (code === 'auth/missing-password' || code === 'auth/weak-password') {
-        setStatus(base + ' Password must be at least 6 characters.');
+        setStatus(action + ' failed. Password must be at least 6 characters.');
+        return;
+      }
+
+      if (code === 'auth/email-already-in-use') {
+        setStatus('Sign up failed. This email is already registered. Use Login instead.');
+        return;
+      }
+
+      if (code === 'auth/user-not-found') {
+        setStatus('Login failed. No account found for this email. Use Sign Up first.');
         return;
       }
 
       if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-        setStatus(base + ' Incorrect email or password.');
+        setStatus('Login failed. Incorrect email or password.');
         return;
       }
 
       if (code === 'auth/user-disabled') {
-        setStatus(base + ' This account has been disabled.');
+        setStatus(action + ' failed. This account has been disabled.');
         return;
       }
 
       if (code === 'auth/too-many-requests') {
-        setStatus(base + ' Too many attempts. Please wait and try again.');
+        setStatus(action + ' failed. Too many attempts. Please wait and try again.');
         return;
       }
 
-      setStatus(base + (code ? ' (Error: ' + code + ')' : ''));
+      setStatus(action + ' failed.' + (code ? ' (Error: ' + code + ')' : ''));
     }
 
-    el('emailLoginBtn').onclick = function () {
-      if (!auth) return;
+    function readEmailPasswordInput() {
       var email = el('emailLoginInput').value.trim();
       var password = el('passwordLoginInput').value;
       if (!email || !password) {
         setStatus('Enter both email and password.');
-        return;
+        return null;
       }
-      auth.signInWithEmailAndPassword(email, password).catch(function (err) {
-        if (err && err.code === 'auth/user-not-found') {
-          return auth.createUserWithEmailAndPassword(email, password).catch(function (createErr) {
-            showEmailAuthError(createErr);
-          });
-        }
-        showEmailAuthError(err);
+      return { email: email, password: password };
+    }
+
+    el('emailLoginBtn').onclick = function () {
+      if (!auth) return;
+      var credentials = readEmailPasswordInput();
+      if (!credentials) return;
+      auth.signInWithEmailAndPassword(credentials.email, credentials.password).catch(function (err) {
+        showEmailAuthError(err, 'login');
+      });
+    };
+
+    el('emailSignupBtn').onclick = function () {
+      if (!auth) return;
+      var credentials = readEmailPasswordInput();
+      if (!credentials) return;
+      auth.createUserWithEmailAndPassword(credentials.email, credentials.password).catch(function (err) {
+        showEmailAuthError(err, 'signup');
       });
     };
 
