@@ -20,7 +20,12 @@
     <section id="authPanel" class="card hidden">
       <h2>Login</h2>
       <p>Login after cookie consent to sync progress and unlock account battle pass rewards.</p>
-      <button id="googleLoginBtn">Login with Google</button>
+      <input id="emailLoginInput" type="email" placeholder="Email">
+      <input id="passwordLoginInput" type="password" placeholder="Password">
+      <div class="grid">
+        <button id="emailLoginBtn">Login</button>
+        <button id="emailSignupBtn">Sign Up</button>
+      </div>
       <button id="guestLoginBtn">Continue as Guest</button>
       <button id="logoutBtn" class="danger hidden">Logout</button>
       <div id="renamePanel" class="rename-controls hidden">
