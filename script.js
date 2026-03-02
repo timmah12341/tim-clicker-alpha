@@ -197,6 +197,7 @@
     'assets/skins/Kartonnen_Doos.png',
     'assets/skins/KirbTim.png',
     'assets/skins/Marble_Tim.png',
+    'assets/skins/Mexicaanse_Tim.png',
     'assets/skins/Mr._Timmah.png',
     'assets/skins/Neutronen_Tim.png',
     'assets/skins/Nyan_Tim.png',
