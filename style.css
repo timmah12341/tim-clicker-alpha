@@ -211,6 +211,39 @@ body.cookie-lock { overflow: hidden; }
   font-size: 0.92rem;
 }
 
+.reset-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: grid;
+  place-items: center;
+  z-index: 100000;
+  padding: 16px;
+}
+
+.reset-card {
+  width: min(460px, 95vw);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.reset-card h3 {
+  margin: 0 0 8px;
+}
+
+.reset-card p {
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+
+.reset-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+}
+
 
 .skin-item {
   display: flex;

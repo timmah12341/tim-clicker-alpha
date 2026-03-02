@@ -1271,15 +1271,6 @@
       setStatus(action + ' failed.' + (code ? ' (Error: ' + code + ')' : ''));
     }
 
-    function readEmailInput() {
-      var email = el('emailLoginInput').value.trim();
-      if (!email) {
-        setStatus('Enter your email address.');
-        return null;
-      }
-      return email;
-    }
-
     function readEmailPasswordInput() {
       var email = el('emailLoginInput').value.trim();
       var password = el('passwordLoginInput').value;
@@ -1288,6 +1279,27 @@
         return null;
       }
       return { email: email, password: password };
+    }
+
+    function toggleResetPopup(show) {
+      var popup = el('resetPopup');
+      if (!popup) return;
+      popup.classList.toggle('hidden', !show);
+      if (!show) return;
+
+      var loginEmail = el('emailLoginInput').value.trim();
+      var resetEmail = el('resetEmailInput');
+      resetEmail.value = loginEmail;
+      resetEmail.focus();
+    }
+
+    function readResetEmailInput() {
+      var email = el('resetEmailInput').value.trim();
+      if (!email) {
+        setStatus('Enter your email address in the reset pop-up.');
+        return null;
+      }
+      return email;
     }
 
     el('emailLoginBtn').onclick = function () {
@@ -1309,10 +1321,20 @@
     };
 
     el('resetPasswordBtn').onclick = function () {
+      toggleResetPopup(true);
+    };
+
+    el('closeResetPopupBtn').onclick = function () {
+      toggleResetPopup(false);
+    };
+
+    el('sendResetEmailBtn').onclick = function () {
       if (!auth) return;
-      var email = readEmailInput();
+      var email = readResetEmailInput();
       if (!email) return;
       auth.sendPasswordResetEmail(email).then(function () {
+        el('emailLoginInput').value = email;
+        toggleResetPopup(false);
         setStatus('Password reset email sent. Check your inbox.');
       }).catch(function (err) {
         showEmailAuthError(err, 'reset');
