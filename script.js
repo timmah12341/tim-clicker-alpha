@@ -169,9 +169,9 @@
     { id: 'u42', name: 'Weapon of Mosquito Destruction', baseCost: 100000000000000000000000, add: 500000000000000000000, icon: 'upgrade41.png' },
     { id: 'u43', name: 'P-A', baseCost: 500000000000000000000000, add: 1000000000000000000000, icon: 'assets/upgrades/P-A.png' },
     { id: 'u44', name: 'G-T', baseCost: 1000000000000000000000000, add: 5000000000000000000000, icon: 'assets/upgrades/G-T.png' },
-    { id: 'u45', name: 'Le Beter Click', baseCost: 2200000, add: 0, mult: 1.2, icon: 'upgrade7.png' },
-    { id: 'u46', name: 'golden ratio', baseCost: 9100000, add: 0, mult: 1.61803398875, icon: 'golden.png' },
-    { id: 'u47', name: 'Clone', baseCost: 45000000, add: 0, mult: 2, maxOwned: 1, icon: 'upgrade41.png' }
+    { id: 'u45', name: 'Le Beter Click', baseCost: 2200000, add: 0, mult: 1.2, icon: 'assets/upgrades/Le_Beter_Click.png' },
+    { id: 'u46', name: 'golden ratio', baseCost: 9100000, add: 0, mult: 1.61803398875, icon: 'assets/upgrades/Golden_Ratio.png' },
+    { id: 'u47', name: 'Clone', baseCost: 45000000, add: 0, mult: 2, maxOwned: 1, icon: 'assets/upgrades/Clone.png' }
   ];
   var UPGRADES = upgrades;
 
