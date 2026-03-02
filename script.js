@@ -28,6 +28,7 @@
   var presenceListener = null;
   var presenceHeartbeatTimer = null;
   var presenceVisibleHandlerBound = false;
+  var presenceTrackingFailed = false;
 
   function buildSessionId() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -642,12 +643,15 @@
   }
 
   function updatePresenceHeartbeat() {
-    if (!presenceRef) return;
+    if (!presenceRef || presenceTrackingFailed) return;
     if (document.visibilityState === 'hidden') return;
     presenceRef.update({
       active: true,
       lastSeenAt: Date.now()
-    }).catch(function () {});
+    }).catch(function () {
+      presenceTrackingFailed = true;
+      stopPresenceTracking();
+    });
   }
 
   function stopPresenceTracking() {
@@ -673,6 +677,7 @@
     presenceRef = null;
     presenceUserRef = null;
     presenceListener = null;
+    presenceTrackingFailed = false;
     setPresencePopupVisible(false);
   }
 
@@ -697,7 +702,10 @@
       .then(function () {
         return presenceRef.onDisconnect().remove();
       })
-      .catch(function () {});
+      .catch(function () {
+        presenceTrackingFailed = true;
+        stopPresenceTracking();
+      });
 
     presenceListener = function (snap) {
       var othersActive = 0;
@@ -783,6 +791,7 @@
   function saveRemote(force) {
     if (!saveAllowed) return;
     if (!firebaseReady || !uid || !db) return;
+    var activeUid = uid;
     var now = Date.now();
     if (!force && now - lastRemoteSaveAt < 4000) return;
     if (saveInFlight) return;
@@ -797,7 +806,7 @@
     for (var i = 0; i < counterEntries.length; i++) {
       (function (path, delta) {
         chain = chain.then(function () {
-          return db.ref('users/' + uid + '/' + path).transaction(function (current) {
+          return db.ref('users/' + activeUid + '/' + path).transaction(function (current) {
             var base = typeof current === 'number' ? current : 0;
             return base + delta;
           });
@@ -815,7 +824,7 @@
         var domain = domainEntries[j];
         payload[domain] = clone(state[domain]);
       }
-      return db.ref('users/' + uid).update(payload);
+      return db.ref('users/' + activeUid).update(payload);
     }).then(function () {
       pendingCounterDeltas = {};
       dirtyDomains = {};
