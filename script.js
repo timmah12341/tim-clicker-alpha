@@ -387,11 +387,16 @@
     battlePassXp: 0,
     battlePassClaimed: [],
     questProgress: { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 },
-    questResetKey: ''
+    questResetKey: '',
+    updatedAt: 0,
+    updatedBySession: ''
   };
 
   var state = clone(defaultState);
   var musicPlayer = null;
+  var sessionId = 'sess_' + Math.random().toString(36).slice(2) + '_' + Date.now().toString(36);
+  var dirtyDomains = {};
+  var pendingCounterDeltas = {};
 
   // ---------- Helpers ----------
   function el(id) { return document.getElementById(id); }
@@ -410,6 +415,8 @@
     if (typeof state.questProgress.upgradesBought !== 'number') state.questProgress.upgradesBought = 0;
     if (typeof state.questProgress.minigamesPlayed !== 'number') state.questProgress.minigamesPlayed = 0;
     if (typeof state.questResetKey !== 'string') state.questResetKey = '';
+    if (typeof state.updatedAt !== 'number') state.updatedAt = 0;
+    if (typeof state.updatedBySession !== 'string') state.updatedBySession = '';
 
     for (var i = 0; i < BATTLE_PASS.rewards.length; i++) {
       var reward = BATTLE_PASS.rewards[i];
@@ -447,10 +454,13 @@
     var todayKey = amsterdamDateKey();
     if (state.questResetKey === todayKey) return false;
     state.questResetKey = todayKey;
+    markDirty('questResetKey');
     state.questProgress = { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 };
+    markDirty('questProgress');
     state.battlePassClaimed = state.battlePassClaimed.filter(function (entry) {
       return entry.indexOf('quest_') !== 0;
     });
+    markDirty('battlePassClaimed');
     return true;
   }
 
@@ -533,11 +543,12 @@
   function claimBattlePassReward(reward) {
     if (!reward) return;
     if (reward.type === 'tims') {
-      state.tims += reward.amount;
+      addTims(reward.amount, false);
       return;
     }
     if (reward.type === 'rebirth') {
       state.rebirths += reward.amount;
+      markDirty('rebirths');
       return;
     }
     if (reward.type === 'coin') {
@@ -545,12 +556,16 @@
       for (var i = 0; i < reward.amount; i++) {
         var randomCoin = coinIds[Math.floor(Math.random() * coinIds.length)];
         state.coinWallet[randomCoin] += 1;
+        markDirty('coinWallet');
       }
       return;
     }
     if (reward.type === 'skin') {
       var skinId = ensureBattlePassSkin(reward);
-      if (skinId && state.skinsOwned.indexOf(skinId) < 0) state.skinsOwned.push(skinId);
+      if (skinId && state.skinsOwned.indexOf(skinId) < 0) {
+        state.skinsOwned.push(skinId);
+        markDirty('skinsOwned');
+      }
     }
   }
 
@@ -558,6 +573,7 @@
     resetDailyQuestsIfNeeded();
     if (!state.questProgress[metric]) state.questProgress[metric] = 0;
     state.questProgress[metric] += amount;
+    queueCounterDelta('questProgress/' + metric, amount);
     var grantedXp = 0;
     for (var i = 0; i < BATTLE_PASS.quests.length; i++) {
       var quest = BATTLE_PASS.quests[i];
@@ -565,10 +581,14 @@
       if (quest.metric !== metric) continue;
       if (state.questProgress[metric] >= quest.goal && state.battlePassClaimed.indexOf(claimedKey) < 0) {
         state.battlePassClaimed.push(claimedKey);
+        markDirty('battlePassClaimed');
         grantedXp += quest.xp;
       }
     }
-    if (grantedXp > 0) state.battlePassXp = Math.min(BATTLE_PASS.maxLevel * BATTLE_PASS.xpPerLevel, state.battlePassXp + grantedXp);
+    if (grantedXp > 0) {
+      state.battlePassXp = Math.min(BATTLE_PASS.maxLevel * BATTLE_PASS.xpPerLevel, state.battlePassXp + grantedXp);
+      queueCounterDelta('battlePassXp', grantedXp);
+    }
   }
 
 
@@ -576,6 +596,43 @@
   var lastRemoteSaveAt = 0;
   var userRef = null;
   var userRefListener = null;
+  var saveInFlight = false;
+
+  function touchMetadata() {
+    state.updatedAt = Date.now();
+    state.updatedBySession = sessionId;
+  }
+
+  function markDirty(domain) {
+    dirtyDomains[domain] = true;
+    touchMetadata();
+  }
+
+  function queueCounterDelta(path, delta) {
+    if (!delta) return;
+    pendingCounterDeltas[path] = (pendingCounterDeltas[path] || 0) + delta;
+    touchMetadata();
+  }
+
+  function pendingDelta(path) {
+    return pendingCounterDeltas[path] || 0;
+  }
+
+  function hasPendingChanges() {
+    return Object.keys(dirtyDomains).length > 0 || Object.keys(pendingCounterDeltas).length > 0;
+  }
+
+  function setTims(value) {
+    state.tims = value;
+    markDirty('tims');
+  }
+
+  function addTims(delta, conflictSafe) {
+    if (!delta) return;
+    state.tims += delta;
+    if (conflictSafe) queueCounterDelta('tims', delta);
+    else markDirty('tims');
+  }
 
   function setPresencePopupVisible(show) {
     var popup = el('presencePopup');
@@ -692,7 +749,28 @@
     userRef = db.ref('users/' + uid);
     userRefListener = function (snap) {
       if (!snap || !snap.exists()) return;
-      state = Object.assign(clone(defaultState), snap.val());
+      var remoteState = Object.assign(clone(defaultState), snap.val());
+      if (!hasPendingChanges()) {
+        state = remoteState;
+      } else {
+        var merged = clone(remoteState);
+        if (dirtyDomains.tims) merged.tims = state.tims;
+        else merged.tims = (remoteState.tims || 0) + pendingDelta('tims');
+        if (dirtyDomains.upgrades) merged.upgrades = clone(state.upgrades);
+        if (dirtyDomains.battlePassXp) merged.battlePassXp = state.battlePassXp;
+        else merged.battlePassXp = (remoteState.battlePassXp || 0) + pendingDelta('battlePassXp');
+        merged.questProgress = dirtyDomains.questProgress ? clone(state.questProgress) : Object.assign({}, remoteState.questProgress || {});
+        var qMetrics = ['clicks', 'upgradesBought', 'minigamesPlayed'];
+        for (var i = 0; i < qMetrics.length; i++) {
+          var metric = qMetrics[i];
+          var path = 'questProgress/' + metric;
+          if (!dirtyDomains.questProgress) merged.questProgress[metric] = (remoteState.questProgress && remoteState.questProgress[metric] || 0) + pendingDelta(path);
+        }
+        if (dirtyDomains.battlePassClaimed) merged.battlePassClaimed = clone(state.battlePassClaimed);
+        if (dirtyDomains.skinsOwned) merged.skinsOwned = clone(state.skinsOwned);
+        if (dirtyDomains.activeSkin) merged.activeSkin = state.activeSkin;
+        state = merged;
+      }
       normalizeState();
       applyActiveSkin();
       renderAll();
@@ -707,9 +785,44 @@
     if (!firebaseReady || !uid || !db) return;
     var now = Date.now();
     if (!force && now - lastRemoteSaveAt < 4000) return;
+    if (saveInFlight) return;
+    if (!hasPendingChanges() && !force) return;
     lastRemoteSaveAt = now;
-    db.ref('users/' + uid).set(state).catch(function () {
+    saveInFlight = true;
+
+    var counterEntries = Object.keys(pendingCounterDeltas);
+    var domainEntries = Object.keys(dirtyDomains);
+    var chain = Promise.resolve();
+
+    for (var i = 0; i < counterEntries.length; i++) {
+      (function (path, delta) {
+        chain = chain.then(function () {
+          return db.ref('users/' + uid + '/' + path).transaction(function (current) {
+            var base = typeof current === 'number' ? current : 0;
+            return base + delta;
+          });
+        });
+      })(counterEntries[i], pendingCounterDeltas[counterEntries[i]]);
+    }
+
+    chain = chain.then(function () {
+      if (domainEntries.length === 0 && !force) return;
+      var payload = {
+        updatedAt: firebase.database.ServerValue.TIMESTAMP,
+        updatedBySession: sessionId
+      };
+      for (var j = 0; j < domainEntries.length; j++) {
+        var domain = domainEntries[j];
+        payload[domain] = clone(state[domain]);
+      }
+      return db.ref('users/' + uid).update(payload);
+    }).then(function () {
+      pendingCounterDeltas = {};
+      dirtyDomains = {};
+    }).catch(function () {
       setStatus('Firebase write failed.');
+    }).finally(function () {
+      saveInFlight = false;
     });
   }
 
@@ -774,8 +887,9 @@
         btn.onclick = function () {
           if (soldOut) return;
           if (state.tims < price) return;
-          state.tims -= price;
+          addTims(-price, false);
           state.upgrades[up.id] = owned + 1;
+          markDirty('upgrades');
           addQuestProgress('upgradesBought', 1);
           saveNow(true);
           renderAll();
@@ -801,10 +915,12 @@
           if (battlePassOnly) return;
           if (!owned) {
             if (state.tims < skin.cost) return;
-            state.tims -= skin.cost;
+            addTims(-skin.cost, false);
             state.skinsOwned.push(skin.id);
+            markDirty('skinsOwned');
           }
           state.activeSkin = skin.id;
+          markDirty('activeSkin');
           applyActiveSkin();
           saveNow(true);
           renderAll();
@@ -826,8 +942,9 @@
         btn.onclick = function () {
           if (!owned) {
             if (state.tims < m.cost) return;
-            state.tims -= m.cost;
+            addTims(-m.cost, false);
             state.musicOwned.push(musicId);
+            markDirty('musicOwned');
           }
           if (musicPlayer) {
             musicPlayer.pause();
@@ -856,10 +973,12 @@
         btn.onclick = function () {
           if (!owned) {
             if (state.tims < bg.cost) return;
-            state.tims -= bg.cost;
+            addTims(-bg.cost, false);
             state.bgOwned.push(bgId);
+            markDirty('bgOwned');
           }
           state.activeBg = bgId;
+          markDirty('activeBg');
           applyBackground();
           saveNow(true);
           renderAll();
@@ -879,9 +998,9 @@
         btn.textContent = game.name + ' - cost ' + game.cost;
         btn.onclick = function () {
           if (state.tims < game.cost) return;
-          state.tims -= game.cost;
+          addTims(-game.cost, false);
           var win = Math.random() < game.winChance;
-          if (win) state.tims += game.reward;
+          if (win) addTims(game.reward, false);
           addQuestProgress('minigamesPlayed', 1);
           el('miniResult').textContent = win ? ('WIN +' + game.reward) : 'LOSE';
           saveNow(true);
@@ -918,6 +1037,7 @@
         btn.onclick = function () {
           claimBattlePassReward(reward);
           state.battlePassClaimed.push(key);
+          markDirty('battlePassClaimed');
           normalizeState();
           saveNow(true);
           renderAll();
@@ -950,6 +1070,7 @@
       }
       select.onchange = function () {
         state.activeCoin = select.value;
+        markDirty('activeCoin');
         saveNow();
         renderAll();
       };
@@ -960,8 +1081,9 @@
       var coin = state.activeCoin;
       var price = state.coinPrice[coin];
       if (state.tims < price) return;
-      state.tims -= price;
+      addTims(-price, false);
       state.coinWallet[coin] += 1;
+      markDirty('coinWallet');
       saveNow(true);
       renderAll();
     };
@@ -970,7 +1092,8 @@
       var coin = state.activeCoin;
       if (state.coinWallet[coin] < 1) return;
       state.coinWallet[coin] -= 1;
-      state.tims += state.coinPrice[coin];
+      addTims(state.coinPrice[coin], false);
+      markDirty('coinWallet');
       saveNow(true);
       renderAll();
     };
@@ -993,7 +1116,7 @@
     var clickBonus = 1 + state.rebirths * 0.25;
     var beterOwned = state.upgrades.u45 || 0;
     if (beterOwned > 0) clickBonus += cps() * 0.2 * beterOwned;
-    state.tims += clickBonus;
+    addTims(clickBonus, true);
     addQuestProgress('clicks', 1);
     saveNow();
     renderAll();
@@ -1002,10 +1125,12 @@
   el('rebirthBtn').onclick = function () {
     var needed = rebirthCost();
     if (state.tims < needed) return;
-    state.tims = 0;
+    setTims(0);
     state.upgrades = {};
+    markDirty('upgrades');
     state.rebirths += 1;
-    saveNow();
+    markDirty('rebirths');
+    saveNow(true);
     renderAll();
   };
 
@@ -1013,9 +1138,10 @@
     var name = el('nameInput').value.trim();
     if (!name) return;
     state.name = name;
+    markDirty('name');
     el('namePanel').classList.add('hidden');
     el('gamePanel').classList.remove('hidden');
-    saveNow();
+    saveNow(true);
     renderAll();
   };
 
@@ -1026,10 +1152,11 @@
       renderAll();
       return;
     }
-    state.tims += cps() / 10;
+    addTims(cps() / 10, true);
     for (var id in COINS) {
       var swing = (Math.random() - 0.5) * COINS[id].vol;
       state.coinPrice[id] = Math.max(15, state.coinPrice[id] + swing);
+      markDirty('coinPrice');
     }
     saveNow(false);
     updateStats();
@@ -1166,6 +1293,7 @@
 
     el('logoutBtn').onclick = function () {
       if (!auth) return;
+      saveNow(true);
       stopRealtimeSync();
       stopPresenceTracking();
       auth.signOut().then(function () {
@@ -1181,6 +1309,7 @@
       var newName = el('renameInput').value.trim();
       if (!newName) return;
       state.name = newName;
+      markDirty('name');
       el('nameInput').value = newName;
       saveNow(true);
       renderAll();
