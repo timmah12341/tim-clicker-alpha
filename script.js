@@ -21,6 +21,37 @@
   var authStateUnsubscribe = null;
   var firebaseReferrerBlocked = false;
   var firebaseReferrerChecked = false;
+  var SESSION_KEY = 'tim_presence_session_id_v1';
+  var sessionId = null;
+  var presenceRef = null;
+  var presenceUserRef = null;
+  var presenceListener = null;
+  var presenceHeartbeatTimer = null;
+  var presenceVisibleHandlerBound = false;
+
+  function buildSessionId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+      return window.crypto.randomUUID();
+    }
+    return 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  }
+
+  function ensureSessionId() {
+    if (sessionId) return sessionId;
+    try {
+      var stored = sessionStorage.getItem(SESSION_KEY);
+      if (stored) {
+        sessionId = stored;
+        return sessionId;
+      }
+    } catch (err) {}
+
+    sessionId = buildSessionId();
+    try {
+      sessionStorage.setItem(SESSION_KEY, sessionId);
+    } catch (err) {}
+    return sessionId;
+  }
 
   function hasOauthRedirectParams() {
     var haystack = ((window.location.search || '') + '&' + (window.location.hash || '')).toLowerCase();
@@ -546,6 +577,92 @@
   var userRef = null;
   var userRefListener = null;
 
+  function setPresencePopupVisible(show) {
+    var popup = el('presencePopup');
+    if (!popup) return;
+    if (show) popup.classList.remove('hidden');
+    else popup.classList.add('hidden');
+  }
+
+  function updatePresenceHeartbeat() {
+    if (!presenceRef) return;
+    if (document.visibilityState === 'hidden') return;
+    presenceRef.update({
+      active: true,
+      lastSeenAt: Date.now()
+    }).catch(function () {});
+  }
+
+  function stopPresenceTracking() {
+    if (presenceHeartbeatTimer) {
+      clearInterval(presenceHeartbeatTimer);
+      presenceHeartbeatTimer = null;
+    }
+
+    if (presenceVisibleHandlerBound) {
+      document.removeEventListener('visibilitychange', updatePresenceHeartbeat);
+      presenceVisibleHandlerBound = false;
+    }
+
+    if (presenceUserRef && presenceListener) {
+      presenceUserRef.off('value', presenceListener);
+    }
+
+    if (presenceRef) {
+      presenceRef.onDisconnect().cancel().catch(function () {});
+      presenceRef.remove().catch(function () {});
+    }
+
+    presenceRef = null;
+    presenceUserRef = null;
+    presenceListener = null;
+    setPresencePopupVisible(false);
+  }
+
+  function startPresenceTracking(currentUid) {
+    if (!firebaseReady || !db || !currentUid) return;
+    stopPresenceTracking();
+
+    var sid = ensureSessionId();
+    presenceRef = db.ref('presence/' + currentUid + '/' + sid);
+    presenceUserRef = db.ref('presence/' + currentUid);
+
+    var now = Date.now();
+    var payload = {
+      sessionId: sid,
+      startedAt: now,
+      lastSeenAt: now,
+      active: true,
+      userAgent: navigator.userAgent || ''
+    };
+
+    presenceRef.set(payload)
+      .then(function () {
+        return presenceRef.onDisconnect().remove();
+      })
+      .catch(function () {});
+
+    presenceListener = function (snap) {
+      var othersActive = 0;
+      if (snap && snap.exists()) {
+        snap.forEach(function (child) {
+          if (child.key === sid) return false;
+          var val = child.val() || {};
+          if (val.active) othersActive += 1;
+          return false;
+        });
+      }
+      setPresencePopupVisible(othersActive > 0);
+    };
+    presenceUserRef.on('value', presenceListener, function () {});
+
+    presenceHeartbeatTimer = setInterval(updatePresenceHeartbeat, 5000);
+    if (!presenceVisibleHandlerBound) {
+      document.addEventListener('visibilitychange', updatePresenceHeartbeat);
+      presenceVisibleHandlerBound = true;
+    }
+  }
+
   function storeConsent(value) {
     try {
       localStorage.setItem(CONSENT_KEY, value);
@@ -923,6 +1040,7 @@
     if (!user) return Promise.resolve();
     uid = user.uid;
     window.timClickerUid = uid;
+    startPresenceTracking(uid);
     setStatus('Firebase connected. UID: ' + uid);
     return db.ref('users/' + uid).once('value').then(function (snap) {
       if (snap && snap.exists()) state = Object.assign(clone(defaultState), snap.val());
@@ -1049,6 +1167,7 @@
     el('logoutBtn').onclick = function () {
       if (!auth) return;
       stopRealtimeSync();
+      stopPresenceTracking();
       auth.signOut().then(function () {
         uid = null;
         window.timClickerUid = null;
@@ -1085,14 +1204,15 @@
       }
 
       stopRealtimeSync();
-    uid = null;
-    window.timClickerUid = null;
-    bindAuthButtons();
+      stopPresenceTracking();
+      uid = null;
+      window.timClickerUid = null;
+      bindAuthButtons();
 
-    if (authStateUnsubscribe) {
-      authStateUnsubscribe();
-      authStateUnsubscribe = null;
-    }
+      if (authStateUnsubscribe) {
+        authStateUnsubscribe();
+        authStateUnsubscribe = null;
+      }
 
       return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
       .catch(function () {
@@ -1112,6 +1232,8 @@
         authStateUnsubscribe = auth.onAuthStateChanged(function (user) {
           updateAuthUi(user);
           if (!user) {
+            stopRealtimeSync();
+            stopPresenceTracking();
             uid = null;
             window.timClickerUid = null;
             setStatus('Login required. Guest save is stored in Firebase by UID only.');
@@ -1163,6 +1285,7 @@
       if (consent === 'declined') {
         saveAllowed = false;
         stopRealtimeSync();
+        stopPresenceTracking();
         uid = null;
         window.timClickerUid = null;
         popup.classList.add('hidden');
@@ -1177,6 +1300,7 @@
 
       saveAllowed = false;
       stopRealtimeSync();
+      stopPresenceTracking();
       uid = null;
       window.timClickerUid = null;
       document.body.classList.add('cookie-lock');
