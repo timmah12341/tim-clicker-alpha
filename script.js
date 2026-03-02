@@ -1217,6 +1217,8 @@
       var code = err && err.code ? err.code : '';
       var action = mode === 'signup' ? 'Sign up' : 'Login';
 
+      if (mode === 'reset') action = 'Password reset';
+
       if (showApiKeyReferrerBlockedMessage(err)) {
         return;
       }
@@ -1256,12 +1258,26 @@
         return;
       }
 
+      if (code === 'auth/missing-email') {
+        setStatus(action + ' failed. Enter your email address first.');
+        return;
+      }
+
       if (code === 'auth/too-many-requests') {
         setStatus(action + ' failed. Too many attempts. Please wait and try again.');
         return;
       }
 
       setStatus(action + ' failed.' + (code ? ' (Error: ' + code + ')' : ''));
+    }
+
+    function readEmailInput() {
+      var email = el('emailLoginInput').value.trim();
+      if (!email) {
+        setStatus('Enter your email address.');
+        return null;
+      }
+      return email;
     }
 
     function readEmailPasswordInput() {
@@ -1289,6 +1305,17 @@
       if (!credentials) return;
       auth.createUserWithEmailAndPassword(credentials.email, credentials.password).catch(function (err) {
         showEmailAuthError(err, 'signup');
+      });
+    };
+
+    el('resetPasswordBtn').onclick = function () {
+      if (!auth) return;
+      var email = readEmailInput();
+      if (!email) return;
+      auth.sendPasswordResetEmail(email).then(function () {
+        setStatus('Password reset email sent. Check your inbox.');
+      }).catch(function (err) {
+        showEmailAuthError(err, 'reset');
       });
     };
 
