@@ -956,7 +956,7 @@
     var needed = rebirthCost();
     el('playerName').textContent = state.name;
     el('tims').textContent = shortNumber(state.tims);
-    el('cps').textContent = cps().toFixed(1);
+    el('cps').textContent = shortNumber(cps());
     el('multi').textContent = 'x' + totalMultiplier().toFixed(2);
     el('rebirths').textContent = state.rebirths;
     el('rebirthBtn').textContent = 'Rebirth (' + shortNumber(needed) + ')';
