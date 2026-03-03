@@ -515,22 +515,73 @@
     return fallbackSkin;
   }
 
-  function effectiveSkinFile(skin) {
-    if (!skin || !skin.file) return '';
-    var cloneOwned = (state.upgrades.u47 || 0) > 0;
-    if (cloneOwned && skin.id === 'skin_1') return CLONE_DVD_SKIN_FILE;
-    return skin.file;
+  var cloneDvdAnimator = null;
+  var cloneDvdNode = null;
+
+  function triggerScreenBarrelRoll() {
+    var body = document.body;
+    if (!body) return;
+    body.classList.remove('screen-barrel-roll');
+    void body.offsetWidth;
+    body.classList.add('screen-barrel-roll');
+    setTimeout(function () {
+      body.classList.remove('screen-barrel-roll');
+    }, 950);
   }
 
-  function triggerTimBarrelRoll() {
-    var timImage = el('timImage');
-    if (!timImage) return;
-    timImage.classList.remove('barrel-roll');
-    void timImage.offsetWidth;
-    timImage.classList.add('barrel-roll');
-    setTimeout(function () {
-      timImage.classList.remove('barrel-roll');
-    }, 1000);
+  function stopCloneDvdBounce() {
+    if (cloneDvdAnimator && cloneDvdAnimator.rafId) cancelAnimationFrame(cloneDvdAnimator.rafId);
+    cloneDvdAnimator = null;
+    if (cloneDvdNode && cloneDvdNode.parentNode) cloneDvdNode.parentNode.removeChild(cloneDvdNode);
+    cloneDvdNode = null;
+  }
+
+  function startCloneDvdBounce() {
+    if (cloneDvdAnimator && cloneDvdNode) return;
+
+    cloneDvdNode = document.createElement('img');
+    cloneDvdNode.id = 'cloneDvdLogo';
+    cloneDvdNode.src = CLONE_DVD_SKIN_FILE;
+    cloneDvdNode.alt = 'Tim Video';
+    cloneDvdNode.draggable = false;
+    document.body.appendChild(cloneDvdNode);
+
+    var w = 140;
+    var h = 78;
+    var x = Math.max(8, Math.floor((window.innerWidth - w) / 2));
+    var y = Math.max(8, Math.floor((window.innerHeight - h) / 2));
+    var vx = 2.4;
+    var vy = 1.9;
+
+    cloneDvdAnimator = { rafId: 0 };
+
+    function tick() {
+      var maxX = Math.max(8, window.innerWidth - w - 8);
+      var maxY = Math.max(8, window.innerHeight - h - 8);
+
+      x += vx;
+      y += vy;
+
+      if (x <= 8 || x >= maxX) {
+        vx *= -1;
+        x = Math.min(Math.max(x, 8), maxX);
+      }
+      if (y <= 8 || y >= maxY) {
+        vy *= -1;
+        y = Math.min(Math.max(y, 8), maxY);
+      }
+
+      if (cloneDvdNode) cloneDvdNode.style.transform = 'translate(' + Math.round(x) + 'px, ' + Math.round(y) + 'px)';
+      if (cloneDvdAnimator) cloneDvdAnimator.rafId = requestAnimationFrame(tick);
+    }
+
+    cloneDvdAnimator.rafId = requestAnimationFrame(tick);
+  }
+
+  function syncCloneDvdEffect() {
+    var cloneOwned = (state.upgrades.u47 || 0) > 0;
+    if (cloneOwned) startCloneDvdBounce();
+    else stopCloneDvdBounce();
   }
 
   function cps() {
@@ -1005,8 +1056,8 @@
           state.upgrades[up.id] = owned + 1;
           markDirty('upgrades');
           addQuestProgress('upgradesBought', 1);
-          if (up.id === 'u7') triggerTimBarrelRoll();
-          if (up.id === 'u47') applyActiveSkin();
+          if (up.id === 'u7') triggerScreenBarrelRoll();
+          if (up.id === 'u47') syncCloneDvdEffect();
           saveNow(true);
           renderAll();
         };
@@ -1226,6 +1277,7 @@
     renderMinigames();
     renderCrypto();
     renderBattlePass();
+    syncCloneDvdEffect();
   }
 
   // ---------- Events ----------
