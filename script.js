@@ -7,7 +7,6 @@
   firebaseConfig.authDomain = 'tim-clicker.firebaseapp.com';
   firebaseConfig.databaseURL = 'https://tim-clicker-default-rtdb.europe-west1.firebasedatabase.app';
   firebaseConfig.projectId = 'tim-clicker';
-  firebaseConfig.storageBucket = 'tim-clicker.firebasestorage.app';
   firebaseConfig.messagingSenderId = '493561136507';
   firebaseConfig.appId = '1:493561136507:web:0a842da88e6a764624e9de';
   firebaseConfig.measurementId = 'G-FTKCVMZH0Z';
