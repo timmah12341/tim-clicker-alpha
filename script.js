@@ -31,6 +31,8 @@
   var presenceHeartbeatTimer = null;
   var presenceVisibleHandlerBound = false;
   var presenceTrackingFailed = false;
+  var presenceDisabledByPolicy = false;
+  var lastPresenceStatus = '';
 
   function buildSessionId() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -779,6 +781,14 @@
     else popup.classList.add('hidden');
   }
 
+
+  function setPresenceStatus(text) {
+    if (text === lastPresenceStatus) return;
+    lastPresenceStatus = text;
+    var statusEl = el('presenceStatus');
+    if (statusEl) statusEl.textContent = text;
+  }
+
   function updatePresenceHeartbeat() {
     if (!presenceRef || presenceTrackingFailed) return;
     if (document.visibilityState === 'hidden') return;
@@ -820,7 +830,9 @@
 
   function startPresenceTracking(currentUid) {
     if (!firebaseReady || !db || !currentUid) return;
+    if (presenceDisabledByPolicy) return;
     stopPresenceTracking();
+    setPresenceStatus('');
 
     var sid = ensureSessionId();
     presenceRef = db.ref('presence/' + currentUid + '/' + sid);
@@ -863,6 +875,8 @@
       .catch(function (err) {
         if (isPermissionDeniedError(err)) {
           setPresencePopupVisible(false);
+          setPresenceStatus('Presence disabled: Realtime Database rules deny access to presence/' + currentUid + '.');
+          presenceDisabledByPolicy = true;
           presenceRef = null;
           presenceUserRef = null;
           presenceListener = null;

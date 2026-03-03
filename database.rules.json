@@ -9,7 +9,10 @@
     "presence": {
       "$uid": {
         ".read": "auth != null && auth.uid == $uid",
-        ".write": "auth != null && auth.uid == $uid"
+        "$sessionId": {
+          ".write": "auth != null && auth.uid == $uid",
+          ".validate": "newData.hasChildren(['sessionId', 'startedAt', 'lastSeenAt', 'active']) && newData.child('sessionId').isString() && newData.child('sessionId').val() == $sessionId && newData.child('startedAt').isNumber() && newData.child('lastSeenAt').isNumber() && newData.child('active').isBoolean()"
+        }
       }
     },
     "globalEvents": {
