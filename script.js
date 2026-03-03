@@ -1630,6 +1630,97 @@
   }
 
   function bindAuthButtons() {
+    function buildPasswordResetSettings() {
+      var cleanUrl = window.location.origin + window.location.pathname;
+      return {
+        url: cleanUrl,
+        handleCodeInApp: true
+      };
+    }
+
+    function clearAuthQueryFromUrl() {
+      if (!window.history || !window.history.replaceState) return;
+      var cleanUrl = window.location.origin + window.location.pathname + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+
+    function readAuthActionParams() {
+      var params = new URLSearchParams(window.location.search || '');
+      var mode = params.get('mode');
+      var oobCode = params.get('oobCode');
+      if (!mode || !oobCode) return null;
+      return {
+        mode: mode,
+        oobCode: oobCode
+      };
+    }
+
+    function setConfirmResetStatus(message) {
+      var statusEl = el('confirmResetStatus');
+      if (!statusEl) return;
+      statusEl.textContent = message || '';
+    }
+
+    function toggleConfirmResetPopup(show) {
+      var popup = el('confirmResetPopup');
+      if (!popup) return;
+      popup.classList.toggle('hidden', !show);
+      if (!show) return;
+      var passwordInput = el('newPasswordInput');
+      passwordInput.value = '';
+      setConfirmResetStatus('');
+      passwordInput.focus();
+    }
+
+    function handlePasswordResetAction(oobCode) {
+      if (!auth || typeof auth.verifyPasswordResetCode !== 'function' || typeof auth.confirmPasswordReset !== 'function') {
+        setStatus('Password reset link opened, but Firebase Auth is not ready on this page.');
+        return;
+      }
+
+      auth.verifyPasswordResetCode(oobCode).then(function (email) {
+        toggleConfirmResetPopup(true);
+        setStatus('Reset link verified for ' + email + '. Choose a new password.');
+      }).catch(function (err) {
+        showEmailAuthError(err, 'reset');
+        clearAuthQueryFromUrl();
+      });
+
+      el('confirmResetBtn').onclick = function () {
+        var newPassword = el('newPasswordInput').value || '';
+        if (newPassword.length < 6) {
+          setConfirmResetStatus('Password must be at least 6 characters.');
+          return;
+        }
+
+        auth.confirmPasswordReset(oobCode, newPassword).then(function () {
+          toggleConfirmResetPopup(false);
+          clearAuthQueryFromUrl();
+          setStatus('Password updated. You can now log in with your new password.');
+        }).catch(function (err) {
+          showEmailAuthError(err, 'reset');
+        });
+      };
+
+      el('newPasswordInput').onkeydown = function (ev) {
+        if (ev.key !== 'Enter') return;
+        ev.preventDefault();
+        el('confirmResetBtn').click();
+      };
+    }
+
+    function processAuthActionFromUrl() {
+      var action = readAuthActionParams();
+      if (!action) return;
+
+      if (action.mode === 'resetPassword') {
+        handlePasswordResetAction(action.oobCode);
+        return;
+      }
+
+      clearAuthQueryFromUrl();
+    }
+
     function sendPasswordReset(email) {
       if (firebaseReferrerBlocked || firebaseReferrerUnknown) {
         return Promise.reject(Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
@@ -1645,7 +1736,7 @@
         }
 
         if (auth && typeof auth.sendPasswordResetEmail === 'function') {
-          return auth.sendPasswordResetEmail(email).catch(function (err) {
+          return auth.sendPasswordResetEmail(email, buildPasswordResetSettings()).catch(function (err) {
             var normalizedError = normalizeFirebaseAuthError(err);
             if (isApiKeyReferrerBlockedError(err)) {
               firebaseReferrerBlocked = true;
@@ -1848,6 +1939,8 @@
       ev.preventDefault();
       el('sendResetEmailBtn').click();
     });
+
+    processAuthActionFromUrl();
 
     el('guestLoginBtn').onclick = function () {
       if (!auth) return;
