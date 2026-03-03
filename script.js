@@ -22,6 +22,7 @@
   var firebaseReferrerBlocked = false;
   var firebaseReferrerChecked = false;
   var SESSION_KEY = 'tim_presence_session_id_v1';
+  var LAST_LOGIN_EMAIL_KEY = 'tim_last_login_email_v1';
   var sessionId = null;
   var presenceRef = null;
   var presenceUserRef = null;
@@ -1186,7 +1187,16 @@
       applyBackground();
       applyActiveSkin();
       renderAll();
+      openGameIfNamed();
     });
+  }
+
+  function openGameIfNamed() {
+    if (!state.name) return;
+    el('namePanel').classList.add('hidden');
+    el('gamePanel').classList.remove('hidden');
+    applyActiveSkin();
+    renderAll();
   }
 
   function updateAuthUi(user) {
@@ -1279,6 +1289,9 @@
         setStatus('Enter both email and password.');
         return null;
       }
+      try {
+        localStorage.setItem(LAST_LOGIN_EMAIL_KEY, email);
+      } catch (err) {}
       return { email: email, password: password };
     }
 
@@ -1335,12 +1348,21 @@
       if (!email) return;
       auth.sendPasswordResetEmail(email).then(function () {
         el('emailLoginInput').value = email;
+        try {
+          localStorage.setItem(LAST_LOGIN_EMAIL_KEY, email);
+        } catch (err) {}
         toggleResetPopup(false);
         setStatus('Password reset email sent. Check your inbox.');
       }).catch(function (err) {
         showEmailAuthError(err, 'reset');
       });
     };
+
+    el('resetEmailInput').addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter') return;
+      ev.preventDefault();
+      el('sendResetEmailBtn').click();
+    });
 
     el('guestLoginBtn').onclick = function () {
       if (!auth) return;
@@ -1443,13 +1465,10 @@
     normalizeState();
     var popup = el('cookiePopup');
 
-    function openIfNamed() {
-      if (!state.name) return;
-      el('namePanel').classList.add('hidden');
-      el('gamePanel').classList.remove('hidden');
-      applyActiveSkin();
-      renderAll();
-    }
+    try {
+      var lastEmail = localStorage.getItem(LAST_LOGIN_EMAIL_KEY);
+      if (lastEmail) el('emailLoginInput').value = lastEmail;
+    } catch (err) {}
 
     function continueAfterConsent(consent) {
       if (consent === 'accepted') {
@@ -1459,12 +1478,12 @@
         el('authPanel').classList.remove('hidden');
         initFirebaseAuth().then(function () {
           applyActiveSkin();
-          openIfNamed();
+          openGameIfNamed();
           renderAll();
         }).catch(function () {
           setStatus('Firebase init failed. Progress could not be saved.');
           applyActiveSkin();
-          openIfNamed();
+          openGameIfNamed();
           renderAll();
         });
         return;
@@ -1481,7 +1500,7 @@
         el('authPanel').classList.add('hidden');
         setStatus('Saving declined. Nothing will be saved (risk accepted).');
         applyActiveSkin();
-        openIfNamed();
+        openGameIfNamed();
         renderAll();
         return;
       }
