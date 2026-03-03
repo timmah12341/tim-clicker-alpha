@@ -1631,6 +1631,11 @@
 
   function bindAuthButtons() {
     function buildPasswordResetSettings() {
+      var isHttpOrigin = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+      if (!isHttpOrigin) {
+        return null;
+      }
+
       var cleanUrl = window.location.origin + window.location.pathname;
       return {
         url: cleanUrl,
@@ -1736,8 +1741,15 @@
         }
 
         if (auth && typeof auth.sendPasswordResetEmail === 'function') {
-          return auth.sendPasswordResetEmail(email, buildPasswordResetSettings()).catch(function (err) {
+          var actionSettings = buildPasswordResetSettings();
+          var sendResetRequest = actionSettings ? auth.sendPasswordResetEmail(email, actionSettings) : auth.sendPasswordResetEmail(email);
+          return sendResetRequest.catch(function (err) {
             var normalizedError = normalizeFirebaseAuthError(err);
+
+            if (actionSettings && (normalizedError.code === 'auth/missing-continue-uri' || normalizedError.code === 'auth/invalid-continue-uri' || normalizedError.code === 'auth/unauthorized-continue-uri' || normalizedError.code === 'auth/unauthorized-domain' || normalizedError.code === 'auth/domain-not-whitelisted' || normalizedError.backendMessage === 'UNAUTHORIZED_DOMAIN')) {
+              return auth.sendPasswordResetEmail(email);
+            }
+
             if (isApiKeyReferrerBlockedError(err)) {
               firebaseReferrerBlocked = true;
               throw Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
