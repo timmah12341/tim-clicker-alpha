@@ -171,9 +171,9 @@
     { id: 'u42', name: 'Weapon of Mosquito Destruction', baseCost: 100000000000000000000000, add: 500000000000000000000, icon: 'upgrade41.png' },
     { id: 'u43', name: 'P-A', baseCost: 500000000000000000000000, add: 1000000000000000000000, icon: 'assets/upgrades/P-A.png' },
     { id: 'u44', name: 'G-T', baseCost: 1000000000000000000000000, add: 5000000000000000000000, icon: 'assets/upgrades/G-T.png' },
-    { id: 'u45', name: 'Le Beter Click', baseCost: 2200000, add: 0, mult: 1.2, icon: 'assets/upgrades/Le_Beter_Click.png' },
-    { id: 'u46', name: 'golden ratio', baseCost: 9100000, add: 0, mult: 1.61803398875, icon: 'assets/upgrades/Golden_Ratio.png' },
-    { id: 'u47', name: 'Clone', baseCost: 45000000, add: 0, mult: 2, maxOwned: 1, icon: 'assets/upgrades/Clone.png' }
+    { id: 'u45', name: 'Le Beter Click', baseCost: 1000000000000000000000, add: 0, bonusPerOwned: 0.2, icon: 'assets/upgrades/Le_Beter_Click.png' },
+    { id: 'u46', name: 'golden ratio', baseCost: 2000000000000000000000, add: 0, bonusPerOwned: 0.61803398875, icon: 'assets/upgrades/Golden_Ratio.png' },
+    { id: 'u47', name: 'Clone', baseCost: 5000000000000000000000, add: 0, mult: 2, maxOwned: 1, icon: 'assets/upgrades/Clone.png' }
   ];
   var UPGRADES = upgrades;
 
@@ -531,6 +531,7 @@
       var up = UPGRADES[i];
       var owned = state.upgrades[up.id] || 0;
       if (up.mult) multiplier *= Math.pow(up.mult, owned);
+      if (up.bonusPerOwned) multiplier += up.bonusPerOwned * owned;
     }
     var skin = currentSkin();
     var skinMultiplier = skin && typeof skin.mult === 'number' ? skin.mult : 1;
@@ -541,6 +542,19 @@
 
   function rebirthCost() {
     return 1000000 * Math.pow(3, state.rebirths);
+  }
+
+  function shortNumber(value) {
+    if (!isFinite(value)) return '0';
+    var sign = value < 0 ? '-' : '';
+    var abs = Math.abs(value);
+    if (abs < 1000) return sign + Math.floor(abs);
+    var units = ['K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No'];
+    var unitIndex = Math.floor(Math.log(abs) / Math.log(1000)) - 1;
+    var safeIndex = Math.max(0, Math.min(unitIndex, units.length - 1));
+    var scaled = abs / Math.pow(1000, safeIndex + 1);
+    var decimals = scaled >= 100 ? 0 : (scaled >= 10 ? 1 : 2);
+    return sign + scaled.toFixed(decimals) + units[safeIndex];
   }
 
   function battlePassLevel() {
@@ -941,11 +955,11 @@
     var coinId = state.activeCoin;
     var needed = rebirthCost();
     el('playerName').textContent = state.name;
-    el('tims').textContent = Math.floor(state.tims);
-    el('cps').textContent = cps().toFixed(1);
+    el('tims').textContent = shortNumber(state.tims);
+    el('cps').textContent = shortNumber(cps());
     el('multi').textContent = 'x' + totalMultiplier().toFixed(2);
     el('rebirths').textContent = state.rebirths;
-    el('rebirthBtn').textContent = 'Rebirth (' + Math.floor(needed) + ')';
+    el('rebirthBtn').textContent = 'Rebirth (' + shortNumber(needed) + ')';
     el('coinPrice').textContent = state.coinPrice[coinId].toFixed(1);
     el('coinWallet').textContent = state.coinWallet[coinId].toFixed(2);
   }
@@ -961,7 +975,7 @@
         var btn = document.createElement('button');
         btn.className = 'upgrade-item';
         btn.innerHTML = '<img src="' + up.icon + '" alt="" data-icon="' + up.icon.replace('assets/upgrades/', '') + '" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=\'assets/upgrades/\'+this.dataset.icon;}else{this.style.display=\'none\';}">' +
-          '<span>' + up.name + ' (' + owned + ')' + (soldOut ? ' - SOLD OUT' : ' - ' + price) + '</span>';
+          '<span>' + up.name + ' (' + owned + ')' + (soldOut ? ' - SOLD OUT' : ' - ' + shortNumber(price)) + '</span>';
         btn.disabled = soldOut;
         btn.onclick = function () {
           if (soldOut) return;
