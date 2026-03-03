@@ -213,7 +213,7 @@
   ];
   var UPGRADES = upgrades;
   var DEFAULT_SKIN_FILE = 'assets/skins/default.png';
-  var CLONE_DVD_SKIN_FILE = 'assets/skins/default-dvd.svg';
+  var CLONE_DVD_SKIN_FILE = 'assets/skins/default.png';
 
 
   var SKINS = [];
@@ -591,8 +591,8 @@
     cloneDvdNode.draggable = false;
     document.body.appendChild(cloneDvdNode);
 
-    var w = 140;
-    var h = 78;
+    var w = 110;
+    var h = 110;
     var x = Math.max(8, Math.floor((window.innerWidth - w) / 2));
     var y = Math.max(8, Math.floor((window.innerHeight - h) / 2));
     var vx = 2.4;
