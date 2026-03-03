@@ -99,8 +99,7 @@
   function ensureFirebaseReady() {
     if (firebaseReady && auth && db) return Promise.resolve(true);
 
-    return checkApiKeyReferrerAccess().then(function (allowed) {
-      if (!allowed) return false;
+    return checkApiKeyReferrerAccess().then(function () {
       try {
         if (window.firebase && !firebase.apps.length) {
           firebase.initializeApp(firebaseConfig);
