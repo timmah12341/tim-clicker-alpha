@@ -932,7 +932,9 @@
       }
       normalizeState();
       saveLocalSnapshot();
-      applyActiveSkin();
+      try {
+        applyActiveSkin();
+      } catch (err) {}
       renderAll();
     };
     userRef.on('value', userRefListener, function () {
@@ -1014,9 +1016,15 @@
     if (!timImage) return;
     var skin = currentSkin();
     if (!skin || !skin.file) return;
-    var skinFile = effectiveSkinFile(skin);
-    if (timImage.getAttribute('src') !== skinFile) {
-      timImage.src = skinFile;
+    try {
+      var skinFile = typeof effectiveSkinFile === 'function'
+        ? effectiveSkinFile(skin)
+        : (skin && skin.file ? skin.file : DEFAULT_SKIN_FILE);
+      if (timImage.getAttribute('src') !== skinFile) {
+        timImage.src = skinFile;
+      }
+    } catch (err) {
+      if (timImage.getAttribute('src') !== DEFAULT_SKIN_FILE) timImage.src = DEFAULT_SKIN_FILE;
     }
   }
 
@@ -1715,11 +1723,15 @@
         document.body.classList.remove('cookie-lock');
         el('authPanel').classList.remove('hidden');
         initFirebaseAuth().then(function () {
-          applyActiveSkin();
+          try {
+            applyActiveSkin();
+          } catch (err) {}
           renderAll();
         }).catch(function () {
           setStatus('Firebase init failed. Progress could not be saved.');
-          applyActiveSkin();
+          try {
+            applyActiveSkin();
+          } catch (err) {}
           renderAll();
         });
         return;
@@ -1736,7 +1748,9 @@
         el('authPanel').classList.add('hidden');
         el('gamePanel').classList.add('hidden');
         setStatus('Saving declined. Nothing will be saved (risk accepted).');
-        applyActiveSkin();
+        try {
+          applyActiveSkin();
+        } catch (err) {}
         renderAll();
         return;
       }
