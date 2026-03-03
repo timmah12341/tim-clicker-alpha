@@ -129,7 +129,14 @@
   function ensureFirebaseReady() {
     if (firebaseReady && auth && db) return Promise.resolve(true);
 
-    return checkApiKeyReferrerAccess().then(function () {
+    return checkApiKeyReferrerAccess().then(function (referrerAllowed) {
+      if (!referrerAllowed || firebaseReferrerBlocked) {
+        firebaseReady = false;
+        auth = null;
+        db = null;
+        return false;
+      }
+
       try {
         if (window.firebase && !firebase.apps.length) {
           firebase.initializeApp(firebaseConfig);
