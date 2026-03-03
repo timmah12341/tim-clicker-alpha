@@ -74,6 +74,60 @@
     return msg.indexOf('api_key_http_referrer_blocked') >= 0 || msg.indexOf('requests from referer') >= 0;
   }
 
+  function normalizeFirebaseAuthError(err) {
+    if (!err) return { code: '', backendMessage: '', message: '' };
+
+    var code = err.code ? String(err.code) : '';
+    var message = err.message ? String(err.message) : '';
+    var backendMessage = err.backendMessage ? String(err.backendMessage).toUpperCase() : '';
+
+    if (!backendMessage && message) {
+      var jsonStart = message.indexOf('{');
+      if (jsonStart >= 0) {
+        try {
+          var parsed = JSON.parse(message.slice(jsonStart));
+          backendMessage = (parsed && parsed.error && parsed.error.message ? String(parsed.error.message) : '').toUpperCase();
+        } catch (parseErr) {}
+      }
+    }
+
+    if (!backendMessage && message) {
+      var messageMatch = message.match(/\b[A-Z][A-Z0-9_]{2,}\b/g);
+      if (messageMatch && messageMatch.length) {
+        backendMessage = messageMatch[messageMatch.length - 1].toUpperCase();
+      }
+    }
+
+    if (!code && backendMessage) {
+      var codeMap = {
+        EMAIL_EXISTS: 'auth/email-already-in-use',
+        EMAIL_NOT_FOUND: 'auth/user-not-found',
+        USER_NOT_FOUND: 'auth/user-not-found',
+        INVALID_EMAIL: 'auth/invalid-email',
+        INVALID_PASSWORD: 'auth/wrong-password',
+        USER_DISABLED: 'auth/user-disabled',
+        OPERATION_NOT_ALLOWED: 'auth/operation-not-allowed',
+        TOO_MANY_ATTEMPTS_TRY_LATER: 'auth/too-many-requests',
+        MISSING_CONTINUE_URI: 'auth/missing-continue-uri',
+        INVALID_CONTINUE_URI: 'auth/invalid-continue-uri',
+        UNAUTHORIZED_CONTINUE_URI: 'auth/unauthorized-continue-uri',
+        UNAUTHORIZED_DOMAIN: 'auth/unauthorized-domain',
+        DOMAIN_NOT_WHITELISTED: 'auth/domain-not-whitelisted',
+        PROJECT_NOT_FOUND: 'auth/project-not-found',
+        CONFIGURATION_NOT_FOUND: 'auth/configuration-not-found',
+        INVALID_API_KEY: 'auth/invalid-api-key'
+      };
+      if (codeMap[backendMessage]) code = codeMap[backendMessage];
+    }
+
+    return {
+      code: code,
+      backendMessage: backendMessage,
+      message: message,
+      original: err
+    };
+  }
+
   function isPermissionDeniedError(err) {
     var code = err && err.code ? String(err.code).toLowerCase() : '';
     var msg = err && err.message ? String(err.message).toLowerCase() : '';
@@ -1592,14 +1646,15 @@
 
         if (auth && typeof auth.sendPasswordResetEmail === 'function') {
           return auth.sendPasswordResetEmail(email).catch(function (err) {
+            var normalizedError = normalizeFirebaseAuthError(err);
             if (isApiKeyReferrerBlockedError(err)) {
               firebaseReferrerBlocked = true;
               throw Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
                 code: 'auth/api-key-http-referrer-blocked'
               });
             }
-            if (err && err.code && err.code !== 'auth/internal-error') throw err;
-            throw err;
+            if (normalizedError.code && normalizedError.code !== 'auth/internal-error') throw normalizedError;
+            throw normalizedError;
           });
         }
 
@@ -1622,8 +1677,9 @@
     }
 
     function showEmailAuthError(err, mode) {
-      var code = err && err.code ? err.code : '';
-      var backendMessage = err && err.backendMessage ? err.backendMessage : '';
+      var normalizedError = normalizeFirebaseAuthError(err);
+      var code = normalizedError.code;
+      var backendMessage = normalizedError.backendMessage;
       var action = mode === 'signup' ? 'Sign up' : 'Login';
 
       if (mode === 'reset') action = 'Password reset';
