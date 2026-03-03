@@ -1411,13 +1411,24 @@
       }).then(function (resp) {
         if (resp.ok) return true;
         return resp.json().then(function (payload) {
-          var msg = payload && payload.error && payload.error.message ? payload.error.message : '';
+          var backendError = payload && payload.error ? payload.error : null;
+          var msg = backendError && backendError.message ? backendError.message : '';
           var err = new Error(msg || 'PASSWORD_RESET_FAILED');
           err.code = msg ? 'auth/' + msg.toLowerCase().replace(/_/g, '-') : 'auth/internal-error';
+          err.backendMessage = msg || '';
+          err.backendStatus = backendError && backendError.status ? backendError.status : '';
+          err.backendError = backendError;
+          err.fromFallback = true;
           throw err;
         }).catch(function (err) {
           if (err && err.code) throw err;
-          throw Object.assign(new Error('PASSWORD_RESET_FAILED'), { code: 'auth/internal-error' });
+          throw Object.assign(new Error('PASSWORD_RESET_FAILED'), {
+            code: 'auth/internal-error',
+            backendMessage: '',
+            backendStatus: '',
+            backendError: null,
+            fromFallback: true
+          });
         });
       });
     }
@@ -1442,6 +1453,7 @@
 
     function showEmailAuthError(err, mode) {
       var code = err && err.code ? err.code : '';
+      var backendMessage = err && err.backendMessage ? err.backendMessage : '';
       var action = mode === 'signup' ? 'Sign up' : 'Login';
 
       if (mode === 'reset') action = 'Password reset';
@@ -1463,6 +1475,38 @@
       if (code === 'auth/missing-password' || code === 'auth/weak-password') {
         setStatus(action + ' failed. Password must be at least 6 characters.');
         return;
+      }
+
+      if (mode === 'reset') {
+        if (code === 'auth/user-not-found') {
+          setStatus('Password reset failed. No account found for this email.');
+          return;
+        }
+
+        if (code === 'auth/missing-continue-uri' || code === 'auth/invalid-continue-uri') {
+          setStatus('Password reset failed. Password reset link configuration is invalid. Check your Firebase Auth email action settings.');
+          return;
+        }
+
+        if (code === 'auth/unauthorized-continue-uri' || code === 'auth/unauthorized-domain' || code === 'auth/domain-not-whitelisted') {
+          setStatus('Password reset failed. This site domain is not authorized for password reset in Firebase Auth settings.');
+          return;
+        }
+
+        if (code === 'auth/project-not-found' || code === 'auth/configuration-not-found') {
+          setStatus('Password reset failed. Firebase Auth email action configuration is missing for this project.');
+          return;
+        }
+
+        if (code === 'auth/invalid-api-key') {
+          setStatus('Password reset failed. Firebase API key is invalid for this project configuration.');
+          return;
+        }
+
+        if (backendMessage === 'UNAUTHORIZED_DOMAIN') {
+          setStatus('Password reset failed. This site domain is not authorized for password reset in Firebase Auth settings.');
+          return;
+        }
       }
 
       if (code === 'auth/email-already-in-use') {
