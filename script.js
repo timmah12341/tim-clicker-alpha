@@ -18,6 +18,7 @@
   var uid = null;
   var saveAllowed = false;
   var CONSENT_KEY = 'tim_cookie_consent_v1';
+  var LOCAL_SAVE_KEY = 'tim_local_state_v1';
   var authStateUnsubscribe = null;
   var firebaseReferrerBlocked = false;
   var firebaseReferrerChecked = false;
@@ -759,6 +760,25 @@
     return null;
   }
 
+  function saveLocalSnapshot() {
+    if (!saveAllowed) return;
+    try {
+      localStorage.setItem(LOCAL_SAVE_KEY, JSON.stringify(state));
+    } catch (err) {}
+  }
+
+  function readLocalSnapshot() {
+    try {
+      var raw = localStorage.getItem(LOCAL_SAVE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      return parsed;
+    } catch (err) {
+      return null;
+    }
+  }
+
   function stopRealtimeSync() {
     if (!userRef || !userRefListener) return;
     userRef.off('value', userRefListener);
@@ -780,6 +800,7 @@
         if (dirtyDomains.tims) merged.tims = state.tims;
         else merged.tims = (remoteState.tims || 0) + pendingDelta('tims');
         if (dirtyDomains.upgrades) merged.upgrades = clone(state.upgrades);
+        if (dirtyDomains.rebirths) merged.rebirths = state.rebirths;
         if (dirtyDomains.battlePassXp) merged.battlePassXp = state.battlePassXp;
         else merged.battlePassXp = (remoteState.battlePassXp || 0) + pendingDelta('battlePassXp');
         merged.questProgress = dirtyDomains.questProgress ? clone(state.questProgress) : Object.assign({}, remoteState.questProgress || {});
@@ -789,12 +810,21 @@
           var path = 'questProgress/' + metric;
           if (!dirtyDomains.questProgress) merged.questProgress[metric] = (remoteState.questProgress && remoteState.questProgress[metric] || 0) + pendingDelta(path);
         }
+        if (dirtyDomains.name) merged.name = state.name;
+        if (dirtyDomains.musicOwned) merged.musicOwned = clone(state.musicOwned);
+        if (dirtyDomains.bgOwned) merged.bgOwned = clone(state.bgOwned);
+        if (dirtyDomains.activeBg) merged.activeBg = state.activeBg;
+        if (dirtyDomains.activeCoin) merged.activeCoin = state.activeCoin;
+        if (dirtyDomains.coinWallet) merged.coinWallet = clone(state.coinWallet);
+        if (dirtyDomains.coinPrice) merged.coinPrice = clone(state.coinPrice);
+        if (dirtyDomains.questResetKey) merged.questResetKey = state.questResetKey;
         if (dirtyDomains.battlePassClaimed) merged.battlePassClaimed = clone(state.battlePassClaimed);
         if (dirtyDomains.skinsOwned) merged.skinsOwned = clone(state.skinsOwned);
         if (dirtyDomains.activeSkin) merged.activeSkin = state.activeSkin;
         state = merged;
       }
       normalizeState();
+      saveLocalSnapshot();
       applyActiveSkin();
       renderAll();
     };
@@ -808,7 +838,7 @@
     if (!firebaseReady || !uid || !db) return;
     var activeUid = uid;
     var now = Date.now();
-    if (!force && now - lastRemoteSaveAt < 4000) return;
+    if (now - lastRemoteSaveAt < 5000) return;
     if (saveInFlight) return;
     if (!hasPendingChanges() && !force) return;
     lastRemoteSaveAt = now;
@@ -851,6 +881,7 @@
   }
 
   function saveNow(forceRemote) {
+    saveLocalSnapshot();
     saveRemote(!!forceRemote);
   }
 
@@ -1212,8 +1243,21 @@
     startPresenceTracking(uid);
     setStatus('Firebase connected. UID: ' + uid);
     return db.ref('users/' + uid).once('value').then(function (snap) {
-      if (snap && snap.exists()) state = Object.assign(clone(defaultState), snap.val());
+      var remoteState = snap && snap.exists() ? Object.assign(clone(defaultState), snap.val()) : null;
+      var localState = readLocalSnapshot();
+      var localUpdatedAt = localState && typeof localState.updatedAt === 'number' ? localState.updatedAt : 0;
+      var remoteUpdatedAt = remoteState && typeof remoteState.updatedAt === 'number' ? remoteState.updatedAt : 0;
+
+      if (localState && localUpdatedAt > remoteUpdatedAt) {
+        state = Object.assign(clone(defaultState), localState);
+        normalizeState();
+        saveNow(true);
+      } else if (remoteState) {
+        state = remoteState;
+      }
+
       normalizeState();
+      saveLocalSnapshot();
       startRealtimeSync();
       applyBackground();
       applyActiveSkin();
@@ -1540,9 +1584,6 @@
   }
 
   function boot() {
-    applyBackground();
-    applyActiveSkin();
-    normalizeState();
     var popup = el('cookiePopup');
 
     try {
@@ -1553,6 +1594,11 @@
     function continueAfterConsent(consent) {
       if (consent === 'accepted') {
         saveAllowed = true;
+        var localState = readLocalSnapshot();
+        if (localState) {
+          state = Object.assign(clone(defaultState), localState);
+          normalizeState();
+        }
         popup.classList.add('hidden');
         document.body.classList.remove('cookie-lock');
         el('authPanel').classList.remove('hidden');

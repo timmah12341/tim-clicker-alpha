@@ -41,17 +41,37 @@ body {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 8px;
+}
+
+.stats > div {
+  min-width: 0;
 }
 
 .stats span {
   display: block;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
-.stats b { font-size: 20px; }
+.stats b {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats .compact-stat b {
+  font-size: 14px;
+  font-weight: 500;
+  color: #d9e4ff;
+}
 
 .click-area { text-align: center; }
 
@@ -316,7 +336,7 @@ body.cookie-lock { overflow: hidden; }
 
 .rename-controls {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
 }
@@ -337,6 +357,28 @@ body.cookie-lock { overflow: hidden; }
 
 .reset-actions.one-col {
   grid-template-columns: 1fr;
+}
+
+@media (max-width: 640px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats b {
+    font-size: 15px;
+  }
+
+  .stats .compact-stat b {
+    font-size: 13px;
+  }
+
+  .rename-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .rename-controls button {
+    width: 100%;
+  }
 }
 
 .loading-overlay {
