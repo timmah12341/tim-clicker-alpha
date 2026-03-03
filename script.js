@@ -562,6 +562,8 @@
   var cloneDvdAnimator = null;
   var cloneDvdNode = null;
   var cloneDvdConfettiNodes = [];
+  var cloneDvdAudioCtx = null;
+  var lastCornerSoundAt = 0;
 
   function triggerScreenBarrelRoll() {
     var body = document.body;
@@ -616,6 +618,39 @@
     }
   }
 
+  function playCloneCornerSound() {
+    var now = Date.now();
+    if (now - lastCornerSoundAt < 90) return;
+    lastCornerSoundAt = now;
+
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!cloneDvdAudioCtx) cloneDvdAudioCtx = new AudioCtx();
+    if (cloneDvdAudioCtx.state === 'suspended') cloneDvdAudioCtx.resume().catch(function () {});
+
+    var ctx = cloneDvdAudioCtx;
+    var start = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(660, start);
+    osc.frequency.exponentialRampToValueAtTime(980, start + 0.08);
+
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.075, start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.16);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + 0.17);
+    osc.onended = function () {
+      osc.disconnect();
+      gain.disconnect();
+    };
+  }
+
   function startCloneDvdBounce() {
     if (cloneDvdAnimator && cloneDvdNode) return;
 
@@ -663,6 +698,7 @@
       if (sideHit) recolorCloneDvd();
       if (horizontalHit && verticalHit) {
         spawnCornerConfetti(x + w / 2, y + h / 2);
+        playCloneCornerSound();
       }
 
       if (cloneDvdNode) cloneDvdNode.style.transform = 'translate(' + Math.round(x) + 'px, ' + Math.round(y) + 'px)';
