@@ -1243,6 +1243,39 @@
   }
 
   function bindAuthButtons() {
+    function sendPasswordResetEmailFallback(email) {
+      var endpoint = 'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=' + encodeURIComponent(firebaseConfig.apiKey);
+      return fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestType: 'PASSWORD_RESET',
+          email: email
+        })
+      }).then(function (resp) {
+        if (resp.ok) return true;
+        return resp.json().then(function (payload) {
+          var msg = payload && payload.error && payload.error.message ? payload.error.message : '';
+          var err = new Error(msg || 'PASSWORD_RESET_FAILED');
+          err.code = msg ? 'auth/' + msg.toLowerCase().replace(/_/g, '-') : 'auth/internal-error';
+          throw err;
+        }).catch(function (err) {
+          if (err && err.code) throw err;
+          throw Object.assign(new Error('PASSWORD_RESET_FAILED'), { code: 'auth/internal-error' });
+        });
+      });
+    }
+
+    function sendPasswordReset(email) {
+      if (auth && typeof auth.sendPasswordResetEmail === 'function') {
+        return auth.sendPasswordResetEmail(email).catch(function (err) {
+          if (err && err.code && err.code !== 'auth/internal-error') throw err;
+          return sendPasswordResetEmailFallback(email);
+        });
+      }
+      return sendPasswordResetEmailFallback(email);
+    }
+
     function showApiKeyReferrerBlockedMessage(err) {
       if (isApiKeyReferrerBlockedError(err)) {
         setStatus('Firebase API key blocked for this host. In Google Cloud Console, allow this site URL under API key HTTP referrers.');
@@ -1370,10 +1403,9 @@
     };
 
     el('sendResetEmailBtn').onclick = function () {
-      if (!auth) return;
       var email = readResetEmailInput();
       if (!email) return;
-      auth.sendPasswordResetEmail(email).then(function () {
+      sendPasswordReset(email).then(function () {
         el('emailLoginInput').value = email;
         try {
           localStorage.setItem(LAST_LOGIN_EMAIL_KEY, email);
