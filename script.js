@@ -563,7 +563,6 @@
   var cloneDvdNode = null;
   var cloneDvdConfettiNodes = [];
   var cloneDvdAudioCtx = null;
-  var lastCornerSoundAt = 0;
 
   function triggerScreenBarrelRoll() {
     var body = document.body;
@@ -619,10 +618,6 @@
   }
 
   function playCloneCornerSound() {
-    var now = Date.now();
-    if (now - lastCornerSoundAt < 90) return;
-    lastCornerSoundAt = now;
-
     var AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     if (!cloneDvdAudioCtx) cloneDvdAudioCtx = new AudioCtx();
@@ -697,7 +692,13 @@
 
       if (sideHit) {
         recolorCloneDvd();
-        playCloneCornerSound();
+        var bounceCount = 0;
+        if (horizontalHit) bounceCount += 1;
+        if (verticalHit) bounceCount += 1;
+        if (bounceCount <= 0) bounceCount = 1;
+        for (var i = 0; i < bounceCount; i += 1) {
+          playCloneCornerSound();
+        }
       }
       if (horizontalHit && verticalHit) {
         spawnCornerConfetti(x + w / 2, y + h / 2);
@@ -1541,66 +1542,6 @@
   }
 
   function bindAuthButtons() {
-    function sendPasswordResetEmailFallback(email) {
-      if (firebaseReferrerBlocked) {
-        throw Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
-          code: 'auth/api-key-http-referrer-blocked',
-          backendMessage: 'API_KEY_HTTP_REFERRER_BLOCKED',
-          backendStatus: 'PERMISSION_DENIED',
-          backendError: null,
-          fromFallback: true
-        });
-      }
-
-      var endpoint = 'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=' + encodeURIComponent(firebaseConfig.apiKey);
-      return fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestType: 'PASSWORD_RESET',
-          email: email
-        })
-      }).then(function (resp) {
-        if (resp.ok) return true;
-        return resp.json().then(function (payload) {
-          var backendError = payload && payload.error ? payload.error : null;
-          var msg = backendError && backendError.message ? backendError.message : '';
-          var reason = '';
-          if (backendError && Array.isArray(backendError.details)) {
-            for (var i = 0; i < backendError.details.length; i += 1) {
-              var detail = backendError.details[i];
-              if (detail && detail.reason) {
-                reason = detail.reason;
-                break;
-              }
-            }
-          }
-
-          if (reason === 'API_KEY_HTTP_REFERRER_BLOCKED' || msg === 'API_KEY_HTTP_REFERRER_BLOCKED') {
-            firebaseReferrerBlocked = true;
-          }
-
-          var err = new Error(msg || 'PASSWORD_RESET_FAILED');
-          var codeSource = reason || msg;
-          err.code = codeSource ? 'auth/' + codeSource.toLowerCase().replace(/_/g, '-') : 'auth/internal-error';
-          err.backendMessage = msg || '';
-          err.backendStatus = backendError && backendError.status ? backendError.status : '';
-          err.backendError = backendError;
-          err.fromFallback = true;
-          throw err;
-        }).catch(function (err) {
-          if (err && err.code) throw err;
-          throw Object.assign(new Error('PASSWORD_RESET_FAILED'), {
-            code: 'auth/internal-error',
-            backendMessage: '',
-            backendStatus: '',
-            backendError: null,
-            fromFallback: true
-          });
-        });
-      });
-    }
-
     function sendPasswordReset(email) {
       if (firebaseReferrerBlocked) {
         return Promise.reject(Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
@@ -1624,11 +1565,13 @@
               });
             }
             if (err && err.code && err.code !== 'auth/internal-error') throw err;
-            return sendPasswordResetEmailFallback(email);
+            throw err;
           });
         }
 
-        return sendPasswordResetEmailFallback(email);
+        return Promise.reject(Object.assign(new Error('FIREBASE_AUTH_NOT_READY'), {
+          code: 'auth/internal-error'
+        }));
       });
     }
 
