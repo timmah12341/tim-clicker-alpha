@@ -695,10 +695,12 @@
         verticalHit = true;
       }
 
-      if (sideHit) recolorCloneDvd();
+      if (sideHit) {
+        recolorCloneDvd();
+        playCloneCornerSound();
+      }
       if (horizontalHit && verticalHit) {
         spawnCornerConfetti(x + w / 2, y + h / 2);
-        playCloneCornerSound();
       }
 
       if (cloneDvdNode) cloneDvdNode.style.transform = 'translate(' + Math.round(x) + 'px, ' + Math.round(y) + 'px)';
