@@ -179,6 +179,16 @@ button.danger {
   background: linear-gradient(180deg, #8a2d2d, #6a2020);
 }
 
+.top-logout {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: auto;
+  min-width: 120px;
+  margin: 0;
+  z-index: 99990;
+}
+
 .cookie-popup.hidden { display: none !important; }
 
 body.cookie-lock { overflow: hidden; }
