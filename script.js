@@ -81,22 +81,36 @@
 
   function getHostSpecificReferrerGuidance() {
     var host = (window.location && window.location.hostname ? window.location.hostname.toLowerCase() : '') || 'unknown-host';
+    var canonicalReferrers = [
+      'https://tim-clicker.firebaseapp.com/*',
+      'https://tim-clicker.web.app/*',
+      'https://timmah12341.github.io/*',
+      'https://timmah12341.github.io/tim-clicker/*'
+    ];
+    var canonicalAuthDomains = [
+      'tim-clicker.firebaseapp.com',
+      'tim-clicker.web.app',
+      'timmah12341.github.io'
+    ];
     var tips = [];
 
     if (host === 'tim-clicker.web.app' || host === 'tim-clicker.firebaseapp.com') {
-      tips.push('Google Cloud API key HTTP referrers: add https://tim-clicker.web.app/* and https://tim-clicker.firebaseapp.com/*');
-      tips.push('Firebase Auth Authorized Domains: add tim-clicker.web.app and tim-clicker.firebaseapp.com');
+      tips.push('Google Cloud API key HTTP referrers: add ' + canonicalReferrers.join(', '));
+      tips.push('Firebase Auth Authorized Domains: add ' + canonicalAuthDomains.join(', '));
     } else if (host.indexOf('github.io') >= 0) {
       var owner = host.replace(/\.github\.io$/, '');
       tips.push('Google Cloud API key HTTP referrers: add https://' + owner + '.github.io/* and, if you use a project path, https://' + owner + '.github.io/<repo>/*');
       tips.push('If Firebase Hosting is also used, add https://tim-clicker.web.app/* and https://tim-clicker.firebaseapp.com/*');
       tips.push('Firebase Auth Authorized Domains: add ' + owner + '.github.io, tim-clicker.web.app, and tim-clicker.firebaseapp.com');
+      tips.push('For tim-clicker production specifically, keep this baseline list: ' + canonicalReferrers.join(', '));
     } else {
       tips.push('Google Cloud API key HTTP referrers: add https://' + host + '/*');
-      tips.push('If GitHub Pages is used, also add https://<owner>.github.io/*');
+      tips.push('If GitHub Pages is used, also add https://<owner>.github.io/* and https://<owner>.github.io/<repo>/*');
       tips.push('If Firebase Hosting is used, also add https://tim-clicker.web.app/* and https://tim-clicker.firebaseapp.com/*');
       tips.push('Firebase Auth Authorized Domains: add ' + host + ' (plus any GitHub/Firebase hosting domains used in production)');
     }
+
+    tips.push('Identity Toolkit API must be enabled in the same Google Cloud project as this API key.');
 
     return 'Current host: ' + host + '. ' + tips.join(' | ');
   }
