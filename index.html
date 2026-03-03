@@ -9,7 +9,7 @@
 </head>
 <body>
   <main class="container">
-    <section id="namePanel" class="card">
+    <section id="namePanel" class="card hidden">
       <h1>Tim Clicker</h1>
       <p>Enter your ingame name to start.</p>
       <input id="nameInput" placeholder="Your name">
@@ -17,7 +17,7 @@
       <p id="firebaseStatus" class="status"></p>
     </section>
 
-    <section id="authPanel" class="card hidden">
+    <section id="authPanel" class="card">
       <h2>Login</h2>
       <p>Login after cookie consent to sync progress and unlock account battle pass rewards.</p>
       <input id="emailLoginInput" type="email" placeholder="Email">
@@ -29,10 +29,6 @@
       </div>
       <button id="guestLoginBtn">Continue as Guest</button>
       <button id="logoutBtn" class="danger hidden">Logout</button>
-      <div id="renamePanel" class="rename-controls hidden">
-        <input id="renameInput" placeholder="New ingame name">
-        <button id="renameBtn">Change name</button>
-      </div>
       <p id="authStatus" class="status"></p>
     </section>
 
@@ -43,6 +39,10 @@
         <div><span>CPS</span><b id="cps">0</b></div>
         <div><span>Multi</span><b id="multi">x1.00</b></div>
         <div><span>Rebirths</span><b id="rebirths">0</b></div>
+        <div id="renamePanel" class="rename-controls">
+          <input id="renameInput" placeholder="New ingame name">
+          <button id="renameBtn">Change name</button>
+        </div>
       </header>
 
       <section class="card click-area">
@@ -137,6 +137,24 @@
         <button id="sendResetEmailBtn">Send reset email</button>
         <button id="closeResetPopupBtn" class="danger">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <div id="namePopup" class="reset-popup hidden" role="dialog" aria-modal="true" aria-labelledby="namePopupTitle">
+    <div class="reset-card">
+      <h3 id="namePopupTitle">Choose your ingame name</h3>
+      <p>Pick a name before you start playing.</p>
+      <input id="popupNameInput" placeholder="Your name">
+      <div class="reset-actions one-col">
+        <button id="savePopupNameBtn">Save name</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="skinLoadingOverlay" class="loading-overlay" aria-live="polite">
+    <div class="loading-card">
+      <img src="assets/skins/default.png" alt="Loading Tim" class="loading-tim">
+      <p>Loading skins...</p>
     </div>
   </div>
 
