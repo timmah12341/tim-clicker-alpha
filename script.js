@@ -78,6 +78,28 @@
     return code.indexOf('permission-denied') >= 0 || code.indexOf('permission_denied') >= 0 || msg.indexOf('permission_denied') >= 0;
   }
 
+  function getHostSpecificReferrerGuidance() {
+    var host = (window.location && window.location.hostname ? window.location.hostname.toLowerCase() : '') || 'unknown-host';
+    var tips = [];
+
+    if (host === 'tim-clicker.web.app' || host === 'tim-clicker.firebaseapp.com') {
+      tips.push('Google Cloud API key HTTP referrers: add https://tim-clicker.web.app/* and https://tim-clicker.firebaseapp.com/*');
+      tips.push('Firebase Auth Authorized Domains: add tim-clicker.web.app and tim-clicker.firebaseapp.com');
+    } else if (host.indexOf('github.io') >= 0) {
+      var owner = host.replace(/\.github\.io$/, '');
+      tips.push('Google Cloud API key HTTP referrers: add https://' + owner + '.github.io/* and, if you use a project path, https://' + owner + '.github.io/<repo>/*');
+      tips.push('If Firebase Hosting is also used, add https://tim-clicker.web.app/* and https://tim-clicker.firebaseapp.com/*');
+      tips.push('Firebase Auth Authorized Domains: add ' + owner + '.github.io, tim-clicker.web.app, and tim-clicker.firebaseapp.com');
+    } else {
+      tips.push('Google Cloud API key HTTP referrers: add https://' + host + '/*');
+      tips.push('If GitHub Pages is used, also add https://<owner>.github.io/*');
+      tips.push('If Firebase Hosting is used, also add https://tim-clicker.web.app/* and https://tim-clicker.firebaseapp.com/*');
+      tips.push('Firebase Auth Authorized Domains: add ' + host + ' (plus any GitHub/Firebase hosting domains used in production)');
+    }
+
+    return 'Current host: ' + host + '. ' + tips.join(' | ');
+  }
+
   function checkApiKeyReferrerAccess() {
     if (firebaseReferrerChecked) return Promise.resolve(!firebaseReferrerBlocked);
     firebaseReferrerChecked = true;
@@ -1445,7 +1467,7 @@
 
     function showApiKeyReferrerBlockedMessage(err) {
       if (isApiKeyReferrerBlockedError(err)) {
-        setStatus('Firebase API key blocked for this host. In Google Cloud Console, allow this site URL under API key HTTP referrers.');
+        setStatus('Firebase API key blocked for this host. ' + getHostSpecificReferrerGuidance());
         return true;
       }
       return false;
@@ -1683,7 +1705,7 @@
     return ensureFirebaseReady().then(function (ready) {
       if (!ready) {
         if (firebaseReferrerBlocked) {
-          setStatus('Firebase API key blocked for this host. Update Google Cloud API key HTTP referrer allowlist.');
+          setStatus('Firebase API key blocked for this host. ' + getHostSpecificReferrerGuidance());
         } else {
           setStatus('Firebase offline. Guest save requires Firebase login.');
         }
