@@ -419,7 +419,7 @@
   var BACKGROUNDS = {
     dark: { name: 'Dark', cost: 0, file: '' },
     ball: { name: 'Ball Guys', cost: 3000, file: 'Ball Guys Background.png' },
-    davdd: { name: 'DAVDD', cost: 3500, file: 'assets/backgrounds/DAVDD.png' }
+    davdd: { name: 'DAVDD', cost: 3500, file: 'DAVDD.png' }
   };
 
   var MINIGAMES = {
