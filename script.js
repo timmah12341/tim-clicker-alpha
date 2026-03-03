@@ -1570,13 +1570,28 @@
         }));
       }
 
-      if (auth && typeof auth.sendPasswordResetEmail === 'function') {
-        return auth.sendPasswordResetEmail(email).catch(function (err) {
-          if (err && err.code && err.code !== 'auth/internal-error') throw err;
-          return sendPasswordResetEmailFallback(email);
-        });
-      }
-      return sendPasswordResetEmailFallback(email);
+      return checkApiKeyReferrerAccess().then(function (referrerAllowed) {
+        if (!referrerAllowed || firebaseReferrerBlocked) {
+          throw Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
+            code: 'auth/api-key-http-referrer-blocked'
+          });
+        }
+
+        if (auth && typeof auth.sendPasswordResetEmail === 'function') {
+          return auth.sendPasswordResetEmail(email).catch(function (err) {
+            if (isApiKeyReferrerBlockedError(err)) {
+              firebaseReferrerBlocked = true;
+              throw Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
+                code: 'auth/api-key-http-referrer-blocked'
+              });
+            }
+            if (err && err.code && err.code !== 'auth/internal-error') throw err;
+            return sendPasswordResetEmailFallback(email);
+          });
+        }
+
+        return sendPasswordResetEmailFallback(email);
+      });
     }
 
     function showApiKeyReferrerBlockedMessage(err) {
