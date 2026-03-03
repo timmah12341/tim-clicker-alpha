@@ -436,3 +436,24 @@ body.screen-barrel-roll .container {
   user-select: none;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
 }
+
+.dvd-confetti {
+  position: fixed;
+  width: 10px;
+  height: 6px;
+  border-radius: 2px;
+  z-index: 100003;
+  pointer-events: none;
+  animation: dvd-confetti-pop 0.9s ease-out forwards;
+}
+
+@keyframes dvd-confetti-pop {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx, 0), var(--dy, -120px)) rotate(var(--rot, 180deg));
+    opacity: 0;
+  }
+}

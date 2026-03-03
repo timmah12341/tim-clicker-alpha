@@ -562,6 +562,7 @@
 
   var cloneDvdAnimator = null;
   var cloneDvdNode = null;
+  var cloneDvdConfettiNodes = [];
 
   function triggerScreenBarrelRoll() {
     var body = document.body;
@@ -577,8 +578,43 @@
   function stopCloneDvdBounce() {
     if (cloneDvdAnimator && cloneDvdAnimator.rafId) cancelAnimationFrame(cloneDvdAnimator.rafId);
     cloneDvdAnimator = null;
+    for (var i = 0; i < cloneDvdConfettiNodes.length; i++) {
+      var confetti = cloneDvdConfettiNodes[i];
+      if (confetti && confetti.parentNode) confetti.parentNode.removeChild(confetti);
+    }
+    cloneDvdConfettiNodes = [];
     if (cloneDvdNode && cloneDvdNode.parentNode) cloneDvdNode.parentNode.removeChild(cloneDvdNode);
     cloneDvdNode = null;
+  }
+
+  function recolorCloneDvd() {
+    if (!cloneDvdNode) return;
+    var hue = Math.floor(Math.random() * 360);
+    cloneDvdNode.style.filter = 'hue-rotate(' + hue + 'deg) saturate(1.45) brightness(1.08) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45))';
+  }
+
+  function spawnCornerConfetti(x, y) {
+    var amount = 24;
+    for (var i = 0; i < amount; i++) {
+      var piece = document.createElement('span');
+      piece.className = 'dvd-confetti';
+      piece.style.left = Math.round(x) + 'px';
+      piece.style.top = Math.round(y) + 'px';
+      piece.style.backgroundColor = 'hsl(' + Math.floor(Math.random() * 360) + 'deg 95% 58%)';
+      piece.style.setProperty('--dx', ((Math.random() - 0.5) * 150).toFixed(2) + 'px');
+      piece.style.setProperty('--dy', ((Math.random() * -170) - 30).toFixed(2) + 'px');
+      piece.style.setProperty('--rot', Math.floor(Math.random() * 720 - 360) + 'deg');
+      piece.style.animationDelay = (Math.random() * 0.05).toFixed(3) + 's';
+      document.body.appendChild(piece);
+      cloneDvdConfettiNodes.push(piece);
+      (function (node) {
+        setTimeout(function () {
+          var idx = cloneDvdConfettiNodes.indexOf(node);
+          if (idx >= 0) cloneDvdConfettiNodes.splice(idx, 1);
+          if (node.parentNode) node.parentNode.removeChild(node);
+        }, 950);
+      })(piece);
+    }
   }
 
   function startCloneDvdBounce() {
@@ -590,6 +626,7 @@
     cloneDvdNode.alt = 'Tim Video';
     cloneDvdNode.draggable = false;
     document.body.appendChild(cloneDvdNode);
+    recolorCloneDvd();
 
     var w = 110;
     var h = 110;
@@ -607,13 +644,26 @@
       x += vx;
       y += vy;
 
+      var sideHit = false;
+      var horizontalHit = false;
+      var verticalHit = false;
+
       if (x <= 8 || x >= maxX) {
         vx *= -1;
         x = Math.min(Math.max(x, 8), maxX);
+        sideHit = true;
+        horizontalHit = true;
       }
       if (y <= 8 || y >= maxY) {
         vy *= -1;
         y = Math.min(Math.max(y, 8), maxY);
+        sideHit = true;
+        verticalHit = true;
+      }
+
+      if (sideHit) recolorCloneDvd();
+      if (horizontalHit && verticalHit) {
+        spawnCornerConfetti(x + w / 2, y + h / 2);
       }
 
       if (cloneDvdNode) cloneDvdNode.style.transform = 'translate(' + Math.round(x) + 'px, ' + Math.round(y) + 'px)';
