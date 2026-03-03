@@ -868,6 +868,30 @@
     }
   }
 
+  function toggleNamePopup(show) {
+    var popup = el('namePopup');
+    if (!popup) return;
+    popup.classList.toggle('hidden', !show);
+    if (!show) return;
+    var input = el('popupNameInput');
+    if (!input) return;
+    input.value = state.name || '';
+    setTimeout(function () { input.focus(); }, 10);
+  }
+
+  function ensureNamedSession() {
+    if (state.name) {
+      el('authPanel').classList.add('hidden');
+      el('gamePanel').classList.remove('hidden');
+      toggleNamePopup(false);
+      applyActiveSkin();
+      renderAll();
+      return;
+    }
+    el('gamePanel').classList.add('hidden');
+    toggleNamePopup(true);
+  }
+
   // ---------- Render ----------
   function updateStats() {
     var coinId = state.activeCoin;
@@ -1123,6 +1147,11 @@
   }
 
   // ---------- Events ----------
+  el('timImage').onerror = function () {
+    if (this.dataset.fallbackApplied) return;
+    this.dataset.fallbackApplied = '1';
+    this.src = 'assets/skins/default.png';
+  };
   el('timImage').onclick = function () {
     var clickBonus = 1 + state.rebirths * 0.25;
     var beterOwned = state.upgrades.u45 || 0;
@@ -1141,17 +1170,6 @@
     markDirty('upgrades');
     state.rebirths += 1;
     markDirty('rebirths');
-    saveNow(true);
-    renderAll();
-  };
-
-  el('saveNameBtn').onclick = function () {
-    var name = el('nameInput').value.trim();
-    if (!name) return;
-    state.name = name;
-    markDirty('name');
-    el('namePanel').classList.add('hidden');
-    el('gamePanel').classList.remove('hidden');
     saveNow(true);
     renderAll();
   };
@@ -1192,26 +1210,22 @@
   }
 
   function openGameIfNamed() {
-    if (!state.name) return;
-    el('namePanel').classList.add('hidden');
-    el('gamePanel').classList.remove('hidden');
-    applyActiveSkin();
-    renderAll();
+    ensureNamedSession();
   }
 
   function updateAuthUi(user) {
     var authStatus = el('authStatus');
     var logoutBtn = el('logoutBtn');
-    var renamePanel = el('renamePanel');
     if (user) {
       authStatus.textContent = 'Logged in as ' + (user.displayName || user.email || 'Guest');
       logoutBtn.classList.remove('hidden');
-      renamePanel.classList.remove('hidden');
       el('renameInput').value = state.name || '';
     } else {
       authStatus.textContent = 'Not logged in. Use email/password or continue as guest.';
       logoutBtn.classList.add('hidden');
-      renamePanel.classList.add('hidden');
+      toggleNamePopup(false);
+      el('gamePanel').classList.add('hidden');
+      el('authPanel').classList.remove('hidden');
     }
   }
 
@@ -1382,6 +1396,9 @@
         window.timClickerUid = null;
         state = clone(defaultState);
         normalizeState();
+        el('gamePanel').classList.add('hidden');
+        el('authPanel').classList.remove('hidden');
+        toggleNamePopup(false);
         renderAll();
       });
     };
@@ -1391,10 +1408,25 @@
       if (!newName) return;
       state.name = newName;
       markDirty('name');
-      el('nameInput').value = newName;
       saveNow(true);
       renderAll();
     };
+
+    el('savePopupNameBtn').onclick = function () {
+      var name = el('popupNameInput').value.trim();
+      if (!name) return;
+      state.name = name;
+      markDirty('name');
+      el('renameInput').value = name;
+      saveNow(true);
+      ensureNamedSession();
+    };
+
+    el('popupNameInput').addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter') return;
+      ev.preventDefault();
+      el('savePopupNameBtn').click();
+    });
   }
 
   function initFirebaseAuth() {
@@ -1449,7 +1481,10 @@
             setStatus('Login required. Guest save is stored in Firebase by UID only.');
             return;
           }
-          syncForUser(user).catch(function () {
+          syncForUser(user).then(function () {
+            el('authPanel').classList.add('hidden');
+            ensureNamedSession();
+          }).catch(function () {
             setStatus('Firebase sync failed. Progress could not be saved.');
           });
         }, function () {
@@ -1478,12 +1513,10 @@
         el('authPanel').classList.remove('hidden');
         initFirebaseAuth().then(function () {
           applyActiveSkin();
-          openGameIfNamed();
           renderAll();
         }).catch(function () {
           setStatus('Firebase init failed. Progress could not be saved.');
           applyActiveSkin();
-          openGameIfNamed();
           renderAll();
         });
         return;
@@ -1498,9 +1531,9 @@
         popup.classList.add('hidden');
         document.body.classList.remove('cookie-lock');
         el('authPanel').classList.add('hidden');
+        el('gamePanel').classList.add('hidden');
         setStatus('Saving declined. Nothing will be saved (risk accepted).');
         applyActiveSkin();
-        openGameIfNamed();
         renderAll();
         return;
       }
@@ -1529,6 +1562,8 @@
   }
 
   loadSkinCatalog(function () {
+    var overlay = el('skinLoadingOverlay');
+    if (overlay) overlay.classList.add('hidden');
     boot();
   });
 })();
