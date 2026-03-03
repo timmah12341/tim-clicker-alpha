@@ -72,6 +72,12 @@
     return msg.indexOf('api_key_http_referrer_blocked') >= 0 || msg.indexOf('requests from referer') >= 0;
   }
 
+  function isPermissionDeniedError(err) {
+    var code = err && err.code ? String(err.code).toLowerCase() : '';
+    var msg = err && err.message ? String(err.message).toLowerCase() : '';
+    return code.indexOf('permission-denied') >= 0 || code.indexOf('permission_denied') >= 0 || msg.indexOf('permission_denied') >= 0;
+  }
+
   function checkApiKeyReferrerAccess() {
     if (firebaseReferrerChecked) return Promise.resolve(!firebaseReferrerBlocked);
     firebaseReferrerChecked = true;
@@ -99,8 +105,7 @@
   function ensureFirebaseReady() {
     if (firebaseReady && auth && db) return Promise.resolve(true);
 
-    return checkApiKeyReferrerAccess().then(function (allowed) {
-      if (!allowed) return false;
+    return checkApiKeyReferrerAccess().then(function () {
       try {
         if (window.firebase && !firebase.apps.length) {
           firebase.initializeApp(firebaseConfig);
@@ -515,6 +520,15 @@
     return fallbackSkin;
   }
 
+  function effectiveSkinFile(skin) {
+    var file = skin && skin.file ? String(skin.file) : '';
+    if (!file) return DEFAULT_SKIN_FILE;
+    if ((state.upgrades.u47 || 0) > 0 && file === DEFAULT_SKIN_FILE) {
+      return CLONE_DVD_SKIN_FILE;
+    }
+    return file;
+  }
+
   var cloneDvdAnimator = null;
   var cloneDvdNode = null;
 
@@ -803,30 +817,38 @@
       .then(function () {
         return presenceRef.onDisconnect().remove();
       })
-      .catch(function () {
+      .then(function () {
+        presenceListener = function (snap) {
+          var othersActive = 0;
+          if (snap && snap.exists()) {
+            snap.forEach(function (child) {
+              if (child.key === sid) return false;
+              var val = child.val() || {};
+              if (val.active) othersActive += 1;
+              return false;
+            });
+          }
+          setPresencePopupVisible(othersActive > 0);
+        };
+        presenceUserRef.on('value', presenceListener, function () {});
+
+        presenceHeartbeatTimer = setInterval(updatePresenceHeartbeat, 5000);
+        if (!presenceVisibleHandlerBound) {
+          document.addEventListener('visibilitychange', updatePresenceHeartbeat);
+          presenceVisibleHandlerBound = true;
+        }
+      })
+      .catch(function (err) {
+        if (isPermissionDeniedError(err)) {
+          setPresencePopupVisible(false);
+          presenceRef = null;
+          presenceUserRef = null;
+          presenceListener = null;
+          return;
+        }
         presenceTrackingFailed = true;
         stopPresenceTracking();
       });
-
-    presenceListener = function (snap) {
-      var othersActive = 0;
-      if (snap && snap.exists()) {
-        snap.forEach(function (child) {
-          if (child.key === sid) return false;
-          var val = child.val() || {};
-          if (val.active) othersActive += 1;
-          return false;
-        });
-      }
-      setPresencePopupVisible(othersActive > 0);
-    };
-    presenceUserRef.on('value', presenceListener, function () {});
-
-    presenceHeartbeatTimer = setInterval(updatePresenceHeartbeat, 5000);
-    if (!presenceVisibleHandlerBound) {
-      document.addEventListener('visibilitychange', updatePresenceHeartbeat);
-      presenceVisibleHandlerBound = true;
-    }
   }
 
   function storeConsent(value) {
