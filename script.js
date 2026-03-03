@@ -1090,7 +1090,11 @@
   function setStatus(text) {
     if (text === lastStatus) return;
     lastStatus = text;
-    el('firebaseStatus').textContent = text;
+    var statusTargets = ['firebaseStatus', 'authStatus', 'resetStatus'];
+    for (var i = 0; i < statusTargets.length; i += 1) {
+      var statusEl = el(statusTargets[i]);
+      if (statusEl) statusEl.textContent = text;
+    }
   }
 
   function applyBackground() {
