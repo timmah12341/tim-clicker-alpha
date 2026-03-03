@@ -257,9 +257,21 @@
     var entries = [];
     var remaining = validatedSkinCandidates.length;
     var completed = false;
+    var retried = false;
 
     function finalize() {
       if (completed) return;
+
+      if (!retried && entries.length <= 1 && validatedSkinCandidates.length > 1) {
+        retried = true;
+        remaining = validatedSkinCandidates.length;
+        for (var i = 0; i < validatedSkinCandidates.length; i++) {
+          resolveCandidate(validatedSkinCandidates[i], i, true);
+        }
+        setTimeout(finalize, 1800);
+        return;
+      }
+
       completed = true;
       if (entries.length === 0) {
         entries.push({ idx: 0, name: 'Default', file: 'assets/skins/default.png' });
@@ -290,8 +302,9 @@
       entries.push(entry);
     }
 
-    function resolveCandidate(candidate, idx) {
+    function resolveCandidate(candidate, idx, forceRefresh) {
       var displayName = skinNameFromFile(candidate);
+      var source = forceRefresh ? (candidate + (candidate.indexOf('?') > -1 ? '&' : '?') + 'r=' + Date.now() + '_' + idx) : candidate;
       var img = new Image();
       img.onload = function () {
         pushEntryIfMissing({ idx: idx, name: displayName, file: candidate });
@@ -312,7 +325,7 @@
         };
         fallbackImg.src = fallback;
       };
-      img.src = candidate;
+      img.src = source;
     }
 
     if (!remaining) {
@@ -1561,9 +1574,15 @@
     continueAfterConsent(readConsent());
   }
 
+  var loadingOverlayTimeout = setTimeout(function () {
+    var forcedOverlay = el('skinLoadingOverlay');
+    if (forcedOverlay) forcedOverlay.classList.add('hidden');
+  }, 4500);
+
   loadSkinCatalog(function () {
     var overlay = el('skinLoadingOverlay');
     if (overlay) overlay.classList.add('hidden');
+    clearTimeout(loadingOverlayTimeout);
     boot();
   });
 })();
