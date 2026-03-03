@@ -412,3 +412,12 @@ body.cookie-lock { overflow: hidden; }
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+#timImage.barrel-roll {
+  animation: tim-barrel-roll 0.95s ease-in-out;
+}
+
+@keyframes tim-barrel-roll {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
