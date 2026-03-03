@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="DVD logo">
+  <defs>
+    <linearGradient id="dvdGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff5ea5"/>
+      <stop offset="50%" stop-color="#71f1ff"/>
+      <stop offset="100%" stop-color="#ffe56f"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+  <rect width="320" height="180" rx="18" fill="#111827"/>
+  <g filter="url(#shadow)" fill="url(#dvdGlow)">
+    <path d="M40 120V63h30c26 0 41 11 41 29s-15 28-41 28H40zm19-15h11c13 0 22-4 22-13s-9-14-22-14H59v27z"/>
+    <path d="M120 120V63h22l17 40 17-40h22v57h-17V86l-14 34h-16l-14-34v34h-17z"/>
+    <path d="M210 120V63h34c15 0 25 7 25 18 0 7-4 12-11 15 10 2 15 9 15 18 0 13-11 22-28 22h-35zm18-34h14c7 0 11-2 11-7 0-4-4-7-11-7h-14v14zm0 24h16c7 0 12-3 12-8s-5-8-12-8h-16v16z"/>
+  </g>
+  <text x="160" y="156" text-anchor="middle" fill="#a5b4fc" font-size="18" font-family="Arial, Helvetica, sans-serif" letter-spacing="2">TIM VIDEO</text>
+</svg>
