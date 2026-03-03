@@ -1501,6 +1501,16 @@
 
   function bindAuthButtons() {
     function sendPasswordResetEmailFallback(email) {
+      if (firebaseReferrerBlocked) {
+        throw Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
+          code: 'auth/api-key-http-referrer-blocked',
+          backendMessage: 'API_KEY_HTTP_REFERRER_BLOCKED',
+          backendStatus: 'PERMISSION_DENIED',
+          backendError: null,
+          fromFallback: true
+        });
+      }
+
       var endpoint = 'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=' + encodeURIComponent(firebaseConfig.apiKey);
       return fetch(endpoint, {
         method: 'POST',
@@ -1514,8 +1524,24 @@
         return resp.json().then(function (payload) {
           var backendError = payload && payload.error ? payload.error : null;
           var msg = backendError && backendError.message ? backendError.message : '';
+          var reason = '';
+          if (backendError && Array.isArray(backendError.details)) {
+            for (var i = 0; i < backendError.details.length; i += 1) {
+              var detail = backendError.details[i];
+              if (detail && detail.reason) {
+                reason = detail.reason;
+                break;
+              }
+            }
+          }
+
+          if (reason === 'API_KEY_HTTP_REFERRER_BLOCKED' || msg === 'API_KEY_HTTP_REFERRER_BLOCKED') {
+            firebaseReferrerBlocked = true;
+          }
+
           var err = new Error(msg || 'PASSWORD_RESET_FAILED');
-          err.code = msg ? 'auth/' + msg.toLowerCase().replace(/_/g, '-') : 'auth/internal-error';
+          var codeSource = reason || msg;
+          err.code = codeSource ? 'auth/' + codeSource.toLowerCase().replace(/_/g, '-') : 'auth/internal-error';
           err.backendMessage = msg || '';
           err.backendStatus = backendError && backendError.status ? backendError.status : '';
           err.backendError = backendError;
@@ -1535,6 +1561,12 @@
     }
 
     function sendPasswordReset(email) {
+      if (firebaseReferrerBlocked) {
+        return Promise.reject(Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
+          code: 'auth/api-key-http-referrer-blocked'
+        }));
+      }
+
       if (auth && typeof auth.sendPasswordResetEmail === 'function') {
         return auth.sendPasswordResetEmail(email).catch(function (err) {
           if (err && err.code && err.code !== 'auth/internal-error') throw err;
