@@ -992,8 +992,9 @@
     if (!timImage) return;
     var skin = currentSkin();
     if (!skin || !skin.file) return;
-    if (timImage.getAttribute('src') !== skin.file) {
-      timImage.src = skin.file;
+    var skinFile = effectiveSkinFile(skin);
+    if (timImage.getAttribute('src') !== skinFile) {
+      timImage.src = skinFile;
     }
   }
 
@@ -1074,7 +1075,8 @@
         var battlePassOnly = isBattlePassSkin(skin) && !owned;
         var btn = document.createElement('button');
         btn.className = 'skin-item';
-        btn.innerHTML = '<img src="' + skin.file + '" alt="" onerror="this.style.display=\'none\'">' +
+        var skinFile = effectiveSkinFile(skin);
+        btn.innerHTML = '<img src="' + skinFile + '" alt="" onerror="this.style.display=\'none\'">' +
           '<span>' + skin.name + (owned ? ' (owned)' : battlePassOnly ? ' (battle pass reward)' : ' - ' + skin.cost) + '</span>';
         btn.disabled = battlePassOnly;
         btn.onclick = function () {
