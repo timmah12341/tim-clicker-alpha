@@ -20,6 +20,7 @@
   var LOCAL_SAVE_KEY = 'tim_local_state_v1';
   var authStateUnsubscribe = null;
   var firebaseReferrerBlocked = false;
+  var firebaseReferrerUnknown = false;
   var firebaseReferrerChecked = false;
   var SESSION_KEY = 'tim_presence_session_id_v1';
   var LAST_LOGIN_EMAIL_KEY = 'tim_last_login_email_v1';
@@ -102,34 +103,53 @@
   }
 
   function checkApiKeyReferrerAccess() {
-    if (firebaseReferrerChecked) return Promise.resolve(!firebaseReferrerBlocked);
+    if (firebaseReferrerChecked) {
+      if (firebaseReferrerBlocked) return Promise.resolve('blocked');
+      if (firebaseReferrerUnknown) return Promise.resolve('unknown');
+      return Promise.resolve('allowed');
+    }
     firebaseReferrerChecked = true;
+    firebaseReferrerBlocked = false;
+    firebaseReferrerUnknown = false;
 
     var url = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=' + encodeURIComponent(firebaseConfig.apiKey);
     return fetch(url, { method: 'GET', mode: 'cors', cache: 'no-store' })
       .then(function (resp) {
-        if (resp.ok) return true;
+        if (resp.ok) return 'allowed';
         return resp.text().then(function (txt) {
           var lower = (txt || '').toLowerCase();
           if (resp.status === 403 && (lower.indexOf('api_key_http_referrer_blocked') >= 0 || lower.indexOf('requests from referer') >= 0)) {
             firebaseReferrerBlocked = true;
-            return false;
+            return 'blocked';
           }
-          return true;
+          firebaseReferrerUnknown = true;
+          return 'unknown';
         }).catch(function () {
-          return resp.status !== 403;
+          firebaseReferrerUnknown = true;
+          return 'unknown';
         });
       })
       .catch(function () {
-        return true;
+        firebaseReferrerUnknown = true;
+        return 'unknown';
       });
+  }
+
+  function getFirebaseReferrerStatusMessage() {
+    if (firebaseReferrerBlocked) {
+      return 'Firebase API key blocked for this host. ' + getHostSpecificReferrerGuidance();
+    }
+    if (firebaseReferrerUnknown) {
+      return 'Firebase preflight verification unavailable. Auth-sensitive actions are blocked until API key access can be verified. ' + getHostSpecificReferrerGuidance();
+    }
+    return '';
   }
 
   function ensureFirebaseReady() {
     if (firebaseReady && auth && db) return Promise.resolve(true);
 
-    return checkApiKeyReferrerAccess().then(function (referrerAllowed) {
-      if (!referrerAllowed || firebaseReferrerBlocked) {
+    return checkApiKeyReferrerAccess().then(function (referrerAccessState) {
+      if (referrerAccessState !== 'allowed' || firebaseReferrerBlocked || firebaseReferrerUnknown) {
         firebaseReady = false;
         auth = null;
         db = null;
@@ -1543,16 +1563,16 @@
 
   function bindAuthButtons() {
     function sendPasswordReset(email) {
-      if (firebaseReferrerBlocked) {
+      if (firebaseReferrerBlocked || firebaseReferrerUnknown) {
         return Promise.reject(Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
-          code: 'auth/api-key-http-referrer-blocked'
+          code: firebaseReferrerUnknown ? 'auth/api-key-referrer-verification-unavailable' : 'auth/api-key-http-referrer-blocked'
         }));
       }
 
-      return checkApiKeyReferrerAccess().then(function (referrerAllowed) {
-        if (!referrerAllowed || firebaseReferrerBlocked) {
+      return checkApiKeyReferrerAccess().then(function (referrerAccessState) {
+        if (referrerAccessState !== 'allowed' || firebaseReferrerBlocked || firebaseReferrerUnknown) {
           throw Object.assign(new Error('API_KEY_HTTP_REFERRER_BLOCKED'), {
-            code: 'auth/api-key-http-referrer-blocked'
+            code: firebaseReferrerUnknown ? 'auth/api-key-referrer-verification-unavailable' : 'auth/api-key-http-referrer-blocked'
           });
         }
 
@@ -1576,8 +1596,12 @@
     }
 
     function showApiKeyReferrerBlockedMessage(err) {
+      if (firebaseReferrerUnknown || (err && err.code === 'auth/api-key-referrer-verification-unavailable')) {
+        setStatus(getFirebaseReferrerStatusMessage());
+        return true;
+      }
       if (isApiKeyReferrerBlockedError(err)) {
-        setStatus('Firebase API key blocked for this host. ' + getHostSpecificReferrerGuidance());
+        setStatus(getFirebaseReferrerStatusMessage());
         return true;
       }
       return false;
@@ -1814,8 +1838,8 @@
 
     return ensureFirebaseReady().then(function (ready) {
       if (!ready) {
-        if (firebaseReferrerBlocked) {
-          setStatus('Firebase API key blocked for this host. ' + getHostSpecificReferrerGuidance());
+        if (firebaseReferrerBlocked || firebaseReferrerUnknown) {
+          setStatus(getFirebaseReferrerStatusMessage());
         } else {
           setStatus('Firebase offline. Guest save requires Firebase login.');
         }
