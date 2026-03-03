@@ -176,6 +176,8 @@
     { id: 'u47', name: 'Clone', baseCost: 5000000000000000000000, add: 0, mult: 2, maxOwned: 1, icon: 'assets/upgrades/Clone.png' }
   ];
   var UPGRADES = upgrades;
+  var DEFAULT_SKIN_FILE = 'assets/skins/default.png';
+  var CLONE_DVD_SKIN_FILE = 'assets/skins/default-dvd.svg';
 
 
   var SKINS = [];
@@ -511,6 +513,24 @@
     }
 
     return fallbackSkin;
+  }
+
+  function effectiveSkinFile(skin) {
+    if (!skin || !skin.file) return '';
+    var cloneOwned = (state.upgrades.u47 || 0) > 0;
+    if (cloneOwned && skin.id === 'skin_1') return CLONE_DVD_SKIN_FILE;
+    return skin.file;
+  }
+
+  function triggerTimBarrelRoll() {
+    var timImage = el('timImage');
+    if (!timImage) return;
+    timImage.classList.remove('barrel-roll');
+    void timImage.offsetWidth;
+    timImage.classList.add('barrel-roll');
+    setTimeout(function () {
+      timImage.classList.remove('barrel-roll');
+    }, 1000);
   }
 
   function cps() {
@@ -921,8 +941,9 @@
     if (!timImage) return;
     var skin = currentSkin();
     if (!skin || !skin.file) return;
-    if (timImage.getAttribute('src') !== skin.file) {
-      timImage.src = skin.file;
+    var skinFile = effectiveSkinFile(skin);
+    if (timImage.getAttribute('src') !== skinFile) {
+      timImage.src = skinFile;
     }
   }
 
@@ -984,6 +1005,8 @@
           state.upgrades[up.id] = owned + 1;
           markDirty('upgrades');
           addQuestProgress('upgradesBought', 1);
+          if (up.id === 'u7') triggerTimBarrelRoll();
+          if (up.id === 'u47') applyActiveSkin();
           saveNow(true);
           renderAll();
         };
@@ -1001,7 +1024,8 @@
         var battlePassOnly = isBattlePassSkin(skin) && !owned;
         var btn = document.createElement('button');
         btn.className = 'skin-item';
-        btn.innerHTML = '<img src="' + skin.file + '" alt="" onerror="this.style.display=\'none\'">' +
+        var skinFile = effectiveSkinFile(skin);
+        btn.innerHTML = '<img src="' + skinFile + '" alt="" onerror="this.style.display=\'none\'">' +
           '<span>' + skin.name + (owned ? ' (owned)' : battlePassOnly ? ' (battle pass reward)' : ' - ' + skin.cost) + '</span>';
         btn.disabled = battlePassOnly;
         btn.onclick = function () {
@@ -1208,7 +1232,7 @@
   el('timImage').onerror = function () {
     if (this.dataset.fallbackApplied) return;
     this.dataset.fallbackApplied = '1';
-    this.src = 'assets/skins/default.png';
+    this.src = DEFAULT_SKIN_FILE;
   };
   el('timImage').onclick = function () {
     var clickBonus = 1 + state.rebirths * 0.25;
