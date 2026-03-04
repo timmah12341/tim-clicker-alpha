@@ -552,6 +552,14 @@
     ]
   };
 
+  var BATTLE_PASS_SKIN_FILES = {};
+  for (var battlePassRewardIndex = 0; battlePassRewardIndex < BATTLE_PASS.rewards.length; battlePassRewardIndex++) {
+    var battlePassReward = BATTLE_PASS.rewards[battlePassRewardIndex];
+    if (battlePassReward && battlePassReward.type === 'skin' && battlePassReward.skinFile) {
+      BATTLE_PASS_SKIN_FILES[battlePassReward.skinFile] = true;
+    }
+  }
+
   var defaultState = {
     name: '',
     tims: 0,
@@ -649,7 +657,9 @@
   }
 
   function isBattlePassSkin(skin) {
-    return !!skin && skin.id.indexOf('bp_skin_') === 0;
+    if (!skin) return false;
+    if (typeof skin.id === 'string' && skin.id.indexOf('bp_skin_') === 0) return true;
+    return !!BATTLE_PASS_SKIN_FILES[skin.file];
   }
 
   function upgradeCost(base, owned) {
