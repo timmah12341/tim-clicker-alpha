@@ -1231,7 +1231,7 @@
       tims: Number(state.tims || 0),
       rebirths: Number(state.rebirths || 0),
       highestMulti: Number(state.highestMulti || 1),
-      updatedAt: firebase.database.ServerValue.TIMESTAMP
+      updatedAt: Date.now()
     };
     db.ref('leaderboard/' + uid).update(payload).catch(function (err) {
       if (!isPermissionDeniedError(err)) return;
@@ -1330,7 +1330,7 @@
     chain = chain.then(function () {
       if (domainEntries.length === 0 && !force) return;
       var payload = {
-        updatedAt: firebase.database.ServerValue.TIMESTAMP,
+        updatedAt: Date.now(),
         updatedBySession: sessionId
       };
       for (var j = 0; j < domainEntries.length; j++) {
