@@ -242,6 +242,16 @@
     return '';
   }
 
+  function maybeRedirectFirebaseAppHost(reason) {
+    var host = (window.location && window.location.hostname ? window.location.hostname.toLowerCase() : '') || '';
+    if (host !== 'tim-clicker.firebaseapp.com') return false;
+
+    var target = 'https://tim-clicker.web.app' + window.location.pathname + window.location.search + window.location.hash;
+    setStatus((reason || 'Firebase API key policy blocks this host.') + ' Redirecting to ' + target + ' ...');
+    window.location.replace(target);
+    return true;
+  }
+
   function getFirebaseReferrerStatusMessage() {
     if (firebaseReferrerBlocked) {
       return 'Firebase API key blocked for this host. ' + getHostSpecificReferrerGuidance();
@@ -257,6 +267,9 @@
 
     return checkApiKeyReferrerAccess().then(function (referrerAccessState) {
       if (referrerAccessState !== 'allowed' || firebaseReferrerBlocked || firebaseReferrerUnknown) {
+        if (firebaseReferrerBlocked) {
+          maybeRedirectFirebaseAppHost('Firebase API key blocked on firebaseapp.com.');
+        }
         firebaseReady = false;
         auth = null;
         db = null;
@@ -1970,10 +1983,12 @@
       var fallback = getPasswordResetFallbackMessage(resetEmail);
       if (firebaseReferrerUnknown || (err && err.code === 'auth/api-key-referrer-verification-unavailable')) {
         setStatus(fallback || getFirebaseReferrerStatusMessage());
+        maybeRedirectFirebaseAppHost('Firebase auth verification is unavailable on firebaseapp.com.');
         return true;
       }
       if (isApiKeyReferrerBlockedError(err)) {
         setStatus(fallback || getFirebaseReferrerStatusMessage());
+        maybeRedirectFirebaseAppHost('Firebase API key blocked on firebaseapp.com.');
         return true;
       }
       return false;
