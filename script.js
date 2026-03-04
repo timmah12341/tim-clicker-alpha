@@ -152,6 +152,18 @@
     return code.indexOf('permission-denied') >= 0 || code.indexOf('permission_denied') >= 0 || msg.indexOf('permission_denied') >= 0;
   }
 
+  function isWriteAuthorizedForUid(targetUid) {
+    if (!auth || !targetUid) return false;
+    var currentUser = auth.currentUser;
+    if (!currentUser || !currentUser.uid) return false;
+    return currentUser.uid === targetUid;
+  }
+
+  function safeFiniteNumber(value, fallback) {
+    var parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
   function getHostSpecificReferrerGuidance() {
     var host = (window.location && window.location.hostname ? window.location.hostname.toLowerCase() : '') || 'unknown-host';
     var canonicalReferrers = [
@@ -1008,6 +1020,10 @@
 
   function updatePresenceHeartbeat() {
     if (!presenceRef || presenceTrackingFailed) return;
+    if (!isWriteAuthorizedForUid(uid)) {
+      stopPresenceTracking();
+      return;
+    }
     if (document.visibilityState === 'hidden') return;
     presenceRef.update({
       active: true,
@@ -1047,6 +1063,7 @@
 
   function startPresenceTracking(currentUid) {
     if (!firebaseReady || !db || !currentUid) return;
+    if (!isWriteAuthorizedForUid(currentUid)) return;
     if (presenceDisabledByPolicy) return;
     stopPresenceTracking();
     setPresenceStatus('');
@@ -1225,12 +1242,15 @@
 
   function pushLeaderboardEntry() {
     if (!firebaseReady || !db || !uid) return;
+    if (!isWriteAuthorizedForUid(uid)) return;
     if (leaderboardWritesBlockedByPolicy) return;
+    var playerName = typeof state.name === 'string' ? state.name.trim() : '';
+    if (playerName.length > 40) playerName = playerName.slice(0, 40);
     var payload = {
-      name: state.name || 'Anonymous Tim',
-      tims: Number(state.tims || 0),
-      rebirths: Number(state.rebirths || 0),
-      highestMulti: Number(state.highestMulti || 1),
+      name: playerName || 'Anonymous Tim',
+      tims: safeFiniteNumber(state.tims, 0),
+      rebirths: safeFiniteNumber(state.rebirths, 0),
+      highestMulti: safeFiniteNumber(state.highestMulti, 1),
       updatedAt: Date.now()
     };
     db.ref('leaderboard/' + uid).update(payload).catch(function (err) {
@@ -1293,6 +1313,7 @@
   function saveRemote(force) {
     if (!saveAllowed) return;
     if (!firebaseReady || !uid || !db) return;
+    if (!isWriteAuthorizedForUid(uid)) return;
     var activeUid = uid;
     var now = Date.now();
     if (now - lastRemoteSaveAt < 5000) return;
