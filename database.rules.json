@@ -22,6 +22,13 @@
     "publicSessions": {
       ".read": true,
       ".write": true
+    },
+    "leaderboard": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid == $uid",
+        ".validate": "newData.hasChildren(['name', 'tims', 'rebirths', 'highestMulti', 'updatedAt']) && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('tims').isNumber() && newData.child('rebirths').isNumber() && newData.child('highestMulti').isNumber() && newData.child('updatedAt').isNumber()"
+      }
     }
   }
 }

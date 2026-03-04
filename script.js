@@ -33,6 +33,10 @@
   var presenceTrackingFailed = false;
   var presenceDisabledByPolicy = false;
   var lastPresenceStatus = '';
+  var leaderboardRef = null;
+  var leaderboardListener = null;
+  var leaderboardEntries = [];
+  var activeLeaderboardBoard = 'tims';
 
   function buildSessionId() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -201,6 +205,15 @@
         firebaseReferrerUnknown = true;
         return 'unknown';
       });
+  }
+
+  function getPasswordResetFallbackMessage(email) {
+    var host = (window.location && window.location.hostname ? window.location.hostname.toLowerCase() : '') || '';
+    if (host === 'tim-clicker.firebaseapp.com') {
+      var target = 'https://tim-clicker.web.app' + window.location.pathname + '?resetEmail=' + encodeURIComponent(email || '');
+      return 'Password reset is blocked on firebaseapp.com by API-key referrer policy. Open this mirror and retry: ' + target;
+    }
+    return '';
   }
 
   function getFirebaseReferrerStatusMessage() {
@@ -517,6 +530,7 @@
     name: '',
     tims: 0,
     rebirths: 0,
+    highestMulti: 1,
     upgrades: {},
     skinsOwned: ['skin_1'],
     activeSkin: 'skin_1',
@@ -559,6 +573,8 @@
     if (typeof state.questResetKey !== 'string') state.questResetKey = '';
     if (typeof state.updatedAt !== 'number') state.updatedAt = 0;
     if (typeof state.updatedBySession !== 'string') state.updatedBySession = '';
+    if (typeof state.highestMulti !== 'number' || !isFinite(state.highestMulti)) state.highestMulti = 1;
+    if (state.highestMulti < 1) state.highestMulti = 1;
 
     for (var i = 0; i < BATTLE_PASS.rewards.length; i++) {
       var reward = BATTLE_PASS.rewards[i];
@@ -1112,6 +1128,95 @@
     userRefListener = null;
   }
 
+  function stopLeaderboardSync() {
+    if (!leaderboardRef || !leaderboardListener) return;
+    leaderboardRef.off('value', leaderboardListener);
+    leaderboardRef = null;
+    leaderboardListener = null;
+    leaderboardEntries = [];
+  }
+
+  function leaderboardValueFor(entry, board) {
+    if (!entry) return 0;
+    if (board === 'rebirths') return Number(entry.rebirths || 0);
+    if (board === 'highestMulti') return Number(entry.highestMulti || 0);
+    return Number(entry.tims || 0);
+  }
+
+  function leaderboardValueLabel(value, board) {
+    if (board === 'highestMulti') return 'x' + Number(value || 0).toFixed(2);
+    return shortNumber(Number(value || 0));
+  }
+
+  function renderLeaderboard() {
+    var listEl = el('leaderboardList');
+    var statusEl = el('leaderboardStatus');
+    if (!listEl || !statusEl) return;
+
+    var entries = leaderboardEntries.slice();
+    entries.sort(function (a, b) {
+      return leaderboardValueFor(b, activeLeaderboardBoard) - leaderboardValueFor(a, activeLeaderboardBoard);
+    });
+
+    listEl.innerHTML = '';
+    if (!entries.length) {
+      statusEl.textContent = 'No players on the board yet.';
+      return;
+    }
+
+    statusEl.textContent = 'Showing top players by ' + (activeLeaderboardBoard === 'highestMulti' ? 'highest multiplier' : activeLeaderboardBoard) + '.';
+    for (var i = 0; i < Math.min(entries.length, 25); i++) {
+      var entry = entries[i] || {};
+      var value = leaderboardValueFor(entry, activeLeaderboardBoard);
+      var item = document.createElement('li');
+      item.innerHTML = '<span class="leaderboard-rank">#' + (i + 1) + '</span>' +
+        '<span class="leaderboard-player">' + (entry.name || 'Anonymous Tim') + '</span>' +
+        '<span class="leaderboard-value">' + leaderboardValueLabel(value, activeLeaderboardBoard) + '</span>';
+      listEl.appendChild(item);
+    }
+  }
+
+  function startLeaderboardSync() {
+    if (!firebaseReady || !db) return;
+    stopLeaderboardSync();
+    leaderboardRef = db.ref('leaderboard');
+    leaderboardListener = function (snap) {
+      var next = [];
+      if (snap && snap.exists()) {
+        snap.forEach(function (child) {
+          var value = child.val() || {};
+          next.push({
+            uid: child.key,
+            name: value.name || 'Anonymous Tim',
+            tims: Number(value.tims || 0),
+            rebirths: Number(value.rebirths || 0),
+            highestMulti: Number(value.highestMulti || 1),
+            updatedAt: Number(value.updatedAt || 0)
+          });
+          return false;
+        });
+      }
+      leaderboardEntries = next;
+      renderLeaderboard();
+    };
+    leaderboardRef.on('value', leaderboardListener, function () {
+      var statusEl = el('leaderboardStatus');
+      if (statusEl) statusEl.textContent = 'Leaderboard unavailable right now.';
+    });
+  }
+
+  function pushLeaderboardEntry() {
+    if (!firebaseReady || !db || !uid) return;
+    var payload = {
+      name: state.name || 'Anonymous Tim',
+      tims: Number(state.tims || 0),
+      rebirths: Number(state.rebirths || 0),
+      highestMulti: Number(state.highestMulti || 1),
+      updatedAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    db.ref('leaderboard/' + uid).update(payload).catch(function () {});
+  }
+
   function startRealtimeSync() {
     if (!firebaseReady || !db || !uid) return;
     stopRealtimeSync();
@@ -1201,6 +1306,7 @@
     }).then(function () {
       pendingCounterDeltas = {};
       dirtyDomains = {};
+      pushLeaderboardEntry();
     }).catch(function () {
       setStatus('Firebase write failed.');
     }).finally(function () {
@@ -1279,10 +1385,15 @@
   function updateStats() {
     var coinId = state.activeCoin;
     var needed = rebirthCost();
+    var liveMulti = totalMultiplier();
+    if (liveMulti > (state.highestMulti || 1)) {
+      state.highestMulti = liveMulti;
+      markDirty('highestMulti');
+    }
     el('playerName').textContent = state.name;
     el('tims').textContent = shortNumber(state.tims);
     el('cps').textContent = shortNumber(cps());
-    el('multi').textContent = 'x' + totalMultiplier().toFixed(2);
+    el('multi').textContent = 'x' + liveMulti.toFixed(2);
     el('rebirths').textContent = state.rebirths;
     el('rebirthBtn').textContent = 'Rebirth (' + shortNumber(needed) + ')';
     el('coinPrice').textContent = state.coinPrice[coinId].toFixed(1);
@@ -1530,10 +1641,26 @@
     renderMinigames();
     renderCrypto();
     renderBattlePass();
+    renderLeaderboard();
     syncCloneDvdEffect();
   }
 
   // ---------- Events ----------
+  function setLeaderboardBoard(board) {
+    activeLeaderboardBoard = board;
+    var tabs = ['tims', 'rebirths', 'highestMulti'];
+    for (var i = 0; i < tabs.length; i++) {
+      var tab = el('leaderboardTab' + (tabs[i] === 'tims' ? 'Tims' : tabs[i] === 'rebirths' ? 'Rebirths' : 'HighestMulti'));
+      if (!tab) continue;
+      tab.classList.toggle('active', tabs[i] === board);
+    }
+    renderLeaderboard();
+  }
+
+  el('leaderboardTabTims').onclick = function () { setLeaderboardBoard('tims'); };
+  el('leaderboardTabRebirths').onclick = function () { setLeaderboardBoard('rebirths'); };
+  el('leaderboardTabHighestMulti').onclick = function () { setLeaderboardBoard('highestMulti'); };
+
   el('timImage').onerror = function () {
     if (this.dataset.fallbackApplied) return;
     this.dataset.fallbackApplied = '1';
@@ -1602,6 +1729,8 @@
       normalizeState();
       saveLocalSnapshot();
       startRealtimeSync();
+      startLeaderboardSync();
+      pushLeaderboardEntry();
       applyBackground();
       applyActiveSkin();
       renderAll();
@@ -1768,12 +1897,14 @@
     }
 
     function showApiKeyReferrerBlockedMessage(err) {
+      var resetEmail = el('resetEmailInput') ? el('resetEmailInput').value.trim() : '';
+      var fallback = getPasswordResetFallbackMessage(resetEmail);
       if (firebaseReferrerUnknown || (err && err.code === 'auth/api-key-referrer-verification-unavailable')) {
-        setStatus(getFirebaseReferrerStatusMessage());
+        setStatus(fallback || getFirebaseReferrerStatusMessage());
         return true;
       }
       if (isApiKeyReferrerBlockedError(err)) {
-        setStatus(getFirebaseReferrerStatusMessage());
+        setStatus(fallback || getFirebaseReferrerStatusMessage());
         return true;
       }
       return false;
@@ -1905,6 +2036,15 @@
       return email;
     }
 
+    var resetEmailParam = (function () {
+      var params = new URLSearchParams(window.location.search || '');
+      return params.get('resetEmail') || '';
+    })();
+    if (resetEmailParam) {
+      el('emailLoginInput').value = resetEmailParam;
+      el('resetEmailInput').value = resetEmailParam;
+    }
+
     el('emailLoginBtn').onclick = function () {
       if (!auth) return;
       var credentials = readEmailPasswordInput();
@@ -1966,6 +2106,7 @@
       if (!auth) return;
       saveNow(true);
       stopRealtimeSync();
+      stopLeaderboardSync();
       stopPresenceTracking();
       auth.signOut().then(function () {
         uid = null;
@@ -2022,6 +2163,7 @@
       }
 
       stopRealtimeSync();
+      stopLeaderboardSync();
       stopPresenceTracking();
       uid = null;
       window.timClickerUid = null;
@@ -2051,6 +2193,7 @@
           updateAuthUi(user);
           if (!user) {
             stopRealtimeSync();
+            stopLeaderboardSync();
             stopPresenceTracking();
             uid = null;
             window.timClickerUid = null;
@@ -2124,6 +2267,7 @@
 
       saveAllowed = false;
       stopRealtimeSync();
+      stopLeaderboardSync();
       stopPresenceTracking();
       uid = null;
       window.timClickerUid = null;
