@@ -37,6 +37,8 @@
   var leaderboardListener = null;
   var leaderboardEntries = [];
   var activeLeaderboardBoard = 'tims';
+  var leaderboardWritesBlockedByPolicy = false;
+  var userGestureCaptured = false;
 
   function buildSessionId() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -44,6 +46,18 @@
     }
     return 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
   }
+
+  function captureUserGesture() {
+    if (userGestureCaptured) return;
+    userGestureCaptured = true;
+    document.removeEventListener('pointerdown', captureUserGesture);
+    document.removeEventListener('keydown', captureUserGesture);
+    document.removeEventListener('touchstart', captureUserGesture);
+  }
+
+  document.addEventListener('pointerdown', captureUserGesture);
+  document.addEventListener('keydown', captureUserGesture);
+  document.addEventListener('touchstart', captureUserGesture);
 
   function ensureSessionId() {
     if (sessionId) return sessionId;
@@ -724,8 +738,12 @@
   function playCloneCornerSound() {
     var AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
+    if (!userGestureCaptured) return;
     if (!cloneDvdAudioCtx) cloneDvdAudioCtx = new AudioCtx();
-    if (cloneDvdAudioCtx.state === 'suspended') cloneDvdAudioCtx.resume().catch(function () {});
+    if (cloneDvdAudioCtx.state === 'suspended') {
+      cloneDvdAudioCtx.resume().catch(function () {});
+      if (cloneDvdAudioCtx.state === 'suspended') return;
+    }
 
     var ctx = cloneDvdAudioCtx;
     var start = ctx.currentTime;
@@ -1207,6 +1225,7 @@
 
   function pushLeaderboardEntry() {
     if (!firebaseReady || !db || !uid) return;
+    if (leaderboardWritesBlockedByPolicy) return;
     var payload = {
       name: state.name || 'Anonymous Tim',
       tims: Number(state.tims || 0),
@@ -1214,7 +1233,12 @@
       highestMulti: Number(state.highestMulti || 1),
       updatedAt: firebase.database.ServerValue.TIMESTAMP
     };
-    db.ref('leaderboard/' + uid).update(payload).catch(function () {});
+    db.ref('leaderboard/' + uid).update(payload).catch(function (err) {
+      if (!isPermissionDeniedError(err)) return;
+      leaderboardWritesBlockedByPolicy = true;
+      var statusEl = el('leaderboardStatus');
+      if (statusEl) statusEl.textContent = 'Leaderboard write disabled: Realtime Database rules deny access.';
+    });
   }
 
   function startRealtimeSync() {
