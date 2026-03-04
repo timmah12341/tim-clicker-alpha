@@ -1305,10 +1305,21 @@
     var domainEntries = Object.keys(dirtyDomains);
     var chain = Promise.resolve();
 
+    var supportsServerIncrement = !!(
+      firebase &&
+      firebase.database &&
+      firebase.database.ServerValue &&
+      typeof firebase.database.ServerValue.increment === 'function'
+    );
+
     for (var i = 0; i < counterEntries.length; i++) {
       (function (path, delta) {
         chain = chain.then(function () {
-          return db.ref('users/' + activeUid + '/' + path).transaction(function (current) {
+          var counterRef = db.ref('users/' + activeUid + '/' + path);
+          if (supportsServerIncrement) {
+            return counterRef.set(firebase.database.ServerValue.increment(delta));
+          }
+          return counterRef.transaction(function (current) {
             var base = typeof current === 'number' ? current : 0;
             return base + delta;
           });
