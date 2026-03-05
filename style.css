@@ -119,8 +119,8 @@ body.bg-cover {
 
 @media (max-width: 767px) {
   body.bg-cover {
-    background-size: 100% auto;
-    background-position: top center;
+    background-size: cover;
+    background-position: center top;
     background-attachment: scroll;
   }
 }
