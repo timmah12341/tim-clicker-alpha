@@ -1260,8 +1260,14 @@
       leaderboardEntries = next;
       renderLeaderboard();
     };
-    leaderboardRef.on('value', leaderboardListener, function () {
+    leaderboardRef.on('value', leaderboardListener, function (err) {
       var statusEl = el('leaderboardStatus');
+      if (isPermissionDeniedError(err)) {
+        leaderboardWritesBlockedByPolicy = true;
+        if (statusEl) statusEl.textContent = 'Leaderboard unavailable: Realtime Database rules deny access.';
+        stopLeaderboardSync();
+        return;
+      }
       if (statusEl) statusEl.textContent = 'Leaderboard unavailable right now.';
     });
   }
@@ -2299,6 +2305,11 @@
 
   function boot() {
     var popup = el('cookiePopup');
+
+    if (window.location && window.location.hostname && window.location.hostname.toLowerCase() === 'tim-clicker.firebaseapp.com') {
+      maybeRedirectFirebaseAppHost('firebaseapp.com is blocked by current API key restrictions.');
+      return;
+    }
 
     try {
       var lastEmail = localStorage.getItem(LAST_LOGIN_EMAIL_KEY);
