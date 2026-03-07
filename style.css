@@ -80,6 +80,29 @@ body {
   cursor: pointer;
   border-radius: 12px;
   border: 1px solid var(--line);
+  transition: transform 100ms ease, filter 100ms ease;
+  transform-origin: center center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+#timImage.tim-click-anim {
+  animation: tim-click-pop 150ms ease-out;
+}
+
+@keyframes tim-click-pop {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  35% {
+    transform: scale(0.92);
+    filter: brightness(1.12);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 input, button, select {

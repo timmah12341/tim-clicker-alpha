@@ -4,7 +4,7 @@
   // ---------- Firebase ----------
   var firebaseConfig = {};
   firebaseConfig.apiKey = 'AIzaSyBZDGbuenDWIE8O0hjCa8h98n1os-8MZNs';
-  firebaseConfig.authDomain = 'tim-clicker.firebaseapp.com';
+  firebaseConfig.authDomain = 'tim-clicker.web.app';
   firebaseConfig.databaseURL = 'https://tim-clicker-default-rtdb.europe-west1.firebasedatabase.app';
   firebaseConfig.projectId = 'tim-clicker';
   firebaseConfig.messagingSenderId = '493561136507';
@@ -38,6 +38,7 @@
   var leaderboardEntries = [];
   var activeLeaderboardBoard = 'tims';
   var leaderboardWritesBlockedByPolicy = false;
+  var leaderboardWriteInFlight = false;
   var userGestureCaptured = false;
 
   function buildSessionId() {
@@ -1276,6 +1277,7 @@
     if (!firebaseReady || !db || !uid) return;
     if (!isWriteAuthorizedForUid(uid)) return;
     if (leaderboardWritesBlockedByPolicy) return;
+    if (leaderboardWriteInFlight) return;
     var playerName = typeof state.name === 'string' ? state.name.trim() : '';
     if (playerName.length > 40) playerName = playerName.slice(0, 40);
     var payload = {
@@ -1285,12 +1287,25 @@
       highestMulti: safeFiniteNumber(state.highestMulti, 1),
       updatedAt: Date.now()
     };
-    db.ref('leaderboard/' + uid).update(payload).catch(function (err) {
-      if (!isPermissionDeniedError(err)) return;
-      leaderboardWritesBlockedByPolicy = true;
-      var statusEl = el('leaderboardStatus');
-      if (statusEl) statusEl.textContent = 'Leaderboard write disabled: Realtime Database rules deny access.';
-    });
+    leaderboardWriteInFlight = true;
+    db.ref('leaderboard/' + uid).update(payload)
+      .catch(function (err) {
+        if (!isPermissionDeniedError(err)) return;
+        leaderboardWritesBlockedByPolicy = true;
+        var statusEl = el('leaderboardStatus');
+        if (statusEl) statusEl.textContent = 'Leaderboard write disabled: Realtime Database rules deny access.';
+      })
+      .finally(function () {
+        leaderboardWriteInFlight = false;
+      });
+  }
+
+  function animateTimClick() {
+    var timImage = el('timImage');
+    if (!timImage) return;
+    timImage.classList.remove('tim-click-anim');
+    void timImage.offsetWidth;
+    timImage.classList.add('tim-click-anim');
   }
 
   function startRealtimeSync() {
@@ -1758,6 +1773,7 @@
     var clickBonus = 1 + state.rebirths * 0.25;
     var beterOwned = state.upgrades.u45 || 0;
     if (beterOwned > 0) clickBonus += cps() * 0.2 * beterOwned;
+    animateTimClick();
     addTims(clickBonus, true);
     addQuestProgress('clicks', 1);
     saveNow();
