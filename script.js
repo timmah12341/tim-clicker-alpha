@@ -291,6 +291,13 @@
         if (window.firebase) {
           auth = firebase.auth();
           db = firebase.database();
+          if (
+            firebase.database &&
+            firebase.database.INTERNAL &&
+            typeof firebase.database.INTERNAL.forceLongPolling === 'function'
+          ) {
+            firebase.database.INTERNAL.forceLongPolling();
+          }
           auth.useDeviceLanguage();
           firebaseReady = true;
         }
