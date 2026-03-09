@@ -165,6 +165,13 @@
     return Number.isFinite(parsed) ? parsed : fallback;
   }
 
+  function safeFiniteNonNegativeNumber(value, fallback, max) {
+    var parsed = safeFiniteNumber(value, fallback);
+    if (parsed < 0) parsed = 0;
+    if (typeof max === 'number' && Number.isFinite(max) && parsed > max) parsed = max;
+    return parsed;
+  }
+
   function getHostSpecificReferrerGuidance() {
     var host = (window.location && window.location.hostname ? window.location.hostname.toLowerCase() : '') || 'unknown-host';
     var canonicalReferrers = [
@@ -600,6 +607,7 @@
   };
 
   var state = clone(defaultState);
+  var MAX_TIMS_VALUE = Number.MAX_VALUE;
   var musicPlayer = null;
   var sessionId = 'sess_' + Math.random().toString(36).slice(2) + '_' + Date.now().toString(36);
   var dirtyDomains = {};
@@ -613,18 +621,20 @@
   }
 
   function normalizeState() {
+    state.tims = safeFiniteNonNegativeNumber(state.tims, 0, MAX_TIMS_VALUE);
+    state.rebirths = Math.floor(safeFiniteNonNegativeNumber(state.rebirths, 0));
     if (!state.battlePassClaimed || !Array.isArray(state.battlePassClaimed)) state.battlePassClaimed = [];
     if (typeof state.battlePassXp !== 'number') state.battlePassXp = 0;
     if (!state.questProgress || typeof state.questProgress !== 'object') {
       state.questProgress = { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 };
     }
-    if (typeof state.questProgress.clicks !== 'number') state.questProgress.clicks = 0;
-    if (typeof state.questProgress.upgradesBought !== 'number') state.questProgress.upgradesBought = 0;
-    if (typeof state.questProgress.minigamesPlayed !== 'number') state.questProgress.minigamesPlayed = 0;
+    state.questProgress.clicks = Math.floor(safeFiniteNonNegativeNumber(state.questProgress.clicks, 0));
+    state.questProgress.upgradesBought = Math.floor(safeFiniteNonNegativeNumber(state.questProgress.upgradesBought, 0));
+    state.questProgress.minigamesPlayed = Math.floor(safeFiniteNonNegativeNumber(state.questProgress.minigamesPlayed, 0));
     if (typeof state.questResetKey !== 'string') state.questResetKey = '';
     if (typeof state.updatedAt !== 'number') state.updatedAt = 0;
     if (typeof state.updatedBySession !== 'string') state.updatedBySession = '';
-    if (typeof state.highestMulti !== 'number' || !isFinite(state.highestMulti)) state.highestMulti = 1;
+    state.highestMulti = safeFiniteNonNegativeNumber(state.highestMulti, 1, Number.MAX_VALUE);
     if (state.highestMulti < 1) state.highestMulti = 1;
 
     for (var i = 0; i < BATTLE_PASS.rewards.length; i++) {
@@ -637,7 +647,20 @@
     }
 
     var bpCap = BATTLE_PASS.maxLevel * BATTLE_PASS.xpPerLevel;
-    state.battlePassXp = Math.max(0, Math.min(bpCap, state.battlePassXp));
+    state.battlePassXp = Math.floor(safeFiniteNonNegativeNumber(state.battlePassXp, 0, bpCap));
+
+    var coinIds = Object.keys(COINS);
+    for (var coinIdx = 0; coinIdx < coinIds.length; coinIdx++) {
+      var coinId = coinIds[coinIdx];
+      state.coinPrice[coinId] = safeFiniteNonNegativeNumber(state.coinPrice[coinId], defaultState.coinPrice[coinId] || 0, Number.MAX_VALUE);
+      state.coinWallet[coinId] = safeFiniteNonNegativeNumber(state.coinWallet[coinId], defaultState.coinWallet[coinId] || 0, Number.MAX_VALUE);
+    }
+
+    for (var upgId in state.upgrades) {
+      if (!Object.prototype.hasOwnProperty.call(state.upgrades, upgId)) continue;
+      state.upgrades[upgId] = Math.floor(safeFiniteNonNegativeNumber(state.upgrades[upgId], 0, Number.MAX_SAFE_INTEGER));
+    }
+
     if (!state.questResetKey) state.questResetKey = amsterdamDateKey();
   }
 
@@ -1019,13 +1042,13 @@
   }
 
   function setTims(value) {
-    state.tims = value;
+    state.tims = safeFiniteNonNegativeNumber(value, 0, MAX_TIMS_VALUE);
     markDirty('tims');
   }
 
   function addTims(delta, conflictSafe) {
-    if (!delta) return;
-    state.tims += delta;
+    if (!delta || !Number.isFinite(delta)) return;
+    state.tims = safeFiniteNonNegativeNumber(state.tims + delta, 0, MAX_TIMS_VALUE);
     if (conflictSafe) queueCounterDelta('tims', delta);
     else markDirty('tims');
   }
@@ -1366,6 +1389,7 @@
     if (now - lastRemoteSaveAt < 5000) return;
     if (saveInFlight) return;
     if (!hasPendingChanges() && !force) return;
+    normalizeState();
     lastRemoteSaveAt = now;
     saveInFlight = true;
 
