@@ -310,60 +310,63 @@
 
   // ---------- Data ----------
   var upgrades = [
-    { id: 'u05', name: 'bacteriophage', baseCost: 1, add: 0.1, icon: 'upgrade0.1.png' },
-    { id: 'u1', name: 'Tim-ema', baseCost: 100, add: 2, icon: 'upgrade1.png' },
-    { id: 'u015', name: 'chezburger', baseCost: 250, add: 4, icon: 'upgrade1.5.png' },
-    { id: 'u2', name: 'Floatie', baseCost: 500, add: 8, icon: 'upgrade2.png' },
-    { id: 'u025', name: 'mier', baseCost: 1000, add: 15, icon: 'upgrade2.5.png' },
-    { id: 'u3', name: ':3', baseCost: 2000, add: 25, icon: 'upgrade3.png' },
-    { id: 'u035', name: 'Shoarma Broodje', baseCost: 4000, add: 40, icon: 'upgrade3.5.png' },
-    { id: 'u4', name: 'Tim', baseCost: 6000, add: 70, icon: 'upgrade4.png' },
-    { id: 'u045', name: 'Teh Epic Tim is comming!!!', baseCost: 10000, add: 120, icon: 'upgrade4.5.png' },
-    { id: 'u5', name: 'Depression Upgrade', baseCost: 15000, add: 180, icon: 'upgrade5.png' },
-    { id: 'u055', name: 'Une petite Biertje', baseCost: 25000, add: 350, icon: 'upgrade5.5.png' },
-    { id: 'u6', name: 'Ball Guy Tim', baseCost: 40000, add: 450, icon: 'upgrade6.png' },
-    { id: 'u065', name: 'Philips stofzuiger D380', baseCost: 70000, add: 700, icon: 'upgrade6.5.png' },
-    { id: 'u7', name: 'Johan', baseCost: 120000, add: 1200, icon: 'upgrade7.png' },
-    { id: 'u8', name: 'Tequilla', baseCost: 300000, add: 2500, icon: 'upgrade8.png' },
-    { id: 'u9', name: 'Golden Tim', baseCost: 1000000, add: 50000, icon: 'upgrade9.png' },
-    { id: 'u10', name: 'Minecraft Steve', baseCost: 5000000, add: 100000, icon: 'upgrade10.png' },
-    { id: 'u11', name: 'ADMIN ABUSE TIM', baseCost: 10000000, add: 500000, icon: 'upgrade11.png' },
-    { id: 'u12', name: 'Nuclear Power Plant', baseCost: 50000000, add: 1000000, icon: 'upgrade12.png' },
-    { id: 'u13', name: 'Tim Clicker™: Ultimate Clicker V.I.P. Edition Deluxe 4.2 free', baseCost: 100000000, add: 5000000, icon: 'upgrade13.png' },
-    { id: 'u14', name: 'Engineer monke', baseCost: 500000000, add: 10000000, icon: 'upgrade14.png' },
-    { id: 'u15', name: 'Hamster Vuurpijl', baseCost: 1000000000, add: 50000000, icon: 'upgrade15.png' },
-    { id: 'u16', name: 'Hatsune Timu', baseCost: 5000000000, add: 100000000, icon: 'upgrade16.png' },
-    { id: 'u17', name: 'TimTimmer', baseCost: 10000000000, add: 500000000, icon: 'upgrade17.png' },
-    { id: 'u18', name: 'Blackhole', baseCost: 50000000000, add: 1000000000, icon: 'upgrade18.png' },
-    { id: 'u19', name: ':wave1: :wave2: :wave3: :wave4:', baseCost: 100000000000, add: 5000000000, icon: 'upgrade19.png' },
-    { id: 'u20', name: 'Tim co.™', baseCost: 500000000000, add: 10000000000, icon: 'upgrade20.png' },
-    { id: 'u21', name: 'White Hole', baseCost: 1000000000000, add: 50000000000, icon: 'upgrade21.png' },
-    { id: 'u22', name: 'DEATH STARE TIM', baseCost: 5000000000000, add: 100000000000, icon: 'upgrade22.png' },
-    { id: 'u23', name: 'Blooket Tim', baseCost: 10000000000000, add: 500000000000, icon: 'upgrade23.png' },
-    { id: 'u24', name: 'Bordspel Geuzen', baseCost: 50000000000000, add: 1000000000000, icon: 'upgrade24.png' },
-    { id: 'u25', name: 'Magnus Carlsen', baseCost: 100000000000000, add: 500000000000, icon: 'upgrade25.png' },
-    { id: 'u26', name: 'Neutronenster', baseCost: 500000000000000, add: 1000000000000, icon: 'upgrade26.png' },
-    { id: 'u27', name: 'Supernova', baseCost: 1000000000000000, add: 5000000000000, icon: 'upgrade27.png' },
-    { id: 'u28', name: 'Polonium-210', baseCost: 5000000000000000, add: 10000000000000, icon: 'upgrade28.png' },
-    { id: 'u29', name: 'Dyson Shell', baseCost: 10000000000000000, add: 50000000000000, icon: 'upgrade29.png' },
-    { id: 'u30', name: 'Particle Accelerator', baseCost: 50000000000000000, add: 100000000000000, icon: 'upgrade30.png' },
-    { id: 'u31', name: 'The heat death of the timiverse', baseCost: 100000000000000000, add: 500000000000000, icon: 'upgrade31.png' },
-    { id: 'u32', name: 'Strange Quark', baseCost: 500000000000000000, add: 1000000000000000, icon: 'upgrade32.png' },
-    { id: 'u33', name: 'The Great Attractor', baseCost: 1000000000000000000, add: 5000000000000000, icon: 'upgrade33.png' },
-    { id: 'u34', name: 'The universe is a doughnut theory', baseCost: 5000000000000000000, add: 10000000000000000, icon: 'upgrade34.png' },
-    { id: 'u35', name: 'Lobotomy', baseCost: 50000000000000000000, add: 100000000000000000, icon: 'upgrade37.png' },
-    { id: 'u36', name: 'Dafthusky', baseCost: 100000000000000000000, add: 500000000000000000, icon: 'upgrade39.png' },
-    { id: 'u37', name: 'Quasar', baseCost: 500000000000000000000, add: 1000000000000000000, icon: 'upgrade35.png' },
-    { id: 'u38', name: 'Who is the inventor of cheese???', baseCost: 1000000000000000000000, add: 5000000000000000000, icon: 'upgradecheese.png' },
-    { id: 'u39', name: 'The fabric of space and Tim', baseCost: 5000000000000000000000, add: 10000000000000000000, icon: 'upgrade36.png' },
-    { id: 'u40', name: 'Deep Brain stimulation', baseCost: 10000000000000000000000, add: 50000000000000000000, icon: 'upgrade38.png' },
-    { id: 'u41', name: '6 laws of quantum physics', baseCost: 50000000000000000000000, add: 100000000000000000000, icon: 'upgrade40.png' },
-    { id: 'u42', name: 'Weapon of Mosquito Destruction', baseCost: 100000000000000000000000, add: 500000000000000000000, icon: 'upgrade41.png' },
+    { id: 'u05', name: 'bacteriophage', baseCost: 1, add: 0.1, icon: 'assets/upgrades/upgrade0.1.png' },
+    { id: 'u1', name: 'Tim-ema', baseCost: 100, add: 2, icon: 'assets/upgrades/upgrade1.png' },
+    { id: 'u015', name: 'chezburger', baseCost: 250, add: 4, icon: 'assets/upgrades/upgrade1.5.png' },
+    { id: 'u2', name: 'Floatie', baseCost: 500, add: 8, icon: 'assets/upgrades/upgrade2.png' },
+    { id: 'u025', name: 'mier', baseCost: 1000, add: 15, icon: 'assets/upgrades/upgrade2.5.png' },
+    { id: 'u3', name: ':3', baseCost: 2000, add: 25, icon: 'assets/upgrades/upgrade3.png' },
+    { id: 'u035', name: 'Shoarma Broodje', baseCost: 4000, add: 40, icon: 'assets/upgrades/upgrade3.5.png' },
+    { id: 'u4', name: 'Tim', baseCost: 6000, add: 70, icon: 'assets/upgrades/upgrade4.png' },
+    { id: 'u045', name: 'Teh Epic Tim is comming!!!', baseCost: 10000, add: 120, icon: 'assets/upgrades/upgrade4.5.png' },
+    { id: 'u5', name: 'Depression Upgrade', baseCost: 15000, add: 180, icon: 'assets/upgrades/upgrade5.png' },
+    { id: 'u055', name: 'Une petite Biertje', baseCost: 25000, add: 350, icon: 'assets/upgrades/upgrade5.5.png' },
+    { id: 'u6', name: 'Ball Guy Tim', baseCost: 40000, add: 450, icon: 'assets/upgrades/upgrade6.png' },
+    { id: 'u065', name: 'Philips stofzuiger D380', baseCost: 70000, add: 700, icon: 'assets/upgrades/upgrade6.5.png' },
+    { id: 'u7', name: 'Johan', baseCost: 120000, add: 1200, icon: 'assets/upgrades/upgrade7.png' },
+    { id: 'u8', name: 'Tequilla', baseCost: 300000, add: 2500, icon: 'assets/upgrades/upgrade8.png' },
+    { id: 'u9', name: 'Golden Tim', baseCost: 1000000, add: 50000, icon: 'assets/upgrades/upgrade9.png' },
+    { id: 'u10', name: 'Minecraft Steve', baseCost: 5000000, add: 100000, icon: 'assets/upgrades/upgrade10.png' },
+    { id: 'u11', name: 'ADMIN ABUSE TIM', baseCost: 10000000, add: 500000, icon: 'assets/upgrades/upgrade11.png' },
+    { id: 'u12', name: 'Nuclear Power Plant', baseCost: 50000000, add: 1000000, icon: 'assets/upgrades/upgrade12.png' },
+    { id: 'u13', name: 'Tim Clicker™: Ultimate Clicker V.I.P. Edition Deluxe 4.2 free', baseCost: 100000000, add: 5000000, icon: 'assets/upgrades/upgrade13.png' },
+    { id: 'u14', name: 'Engineer monke', baseCost: 500000000, add: 10000000, icon: 'assets/upgrades/upgrade14.png' },
+    { id: 'u15', name: 'Hamster Vuurpijl', baseCost: 1000000000, add: 50000000, icon: 'assets/upgrades/upgrade15.png' },
+    { id: 'u16', name: 'Hatsune Timu', baseCost: 5000000000, add: 100000000, icon: 'assets/upgrades/upgrade16.png' },
+    { id: 'u17', name: 'TimTimmer', baseCost: 10000000000, add: 500000000, icon: 'assets/upgrades/upgrade17.png' },
+    { id: 'u18', name: 'Blackhole', baseCost: 50000000000, add: 1000000000, icon: 'assets/upgrades/upgrade18.png' },
+    { id: 'u19', name: ':wave1: :wave2: :wave3: :wave4:', baseCost: 100000000000, add: 5000000000, icon: 'assets/upgrades/upgrade19.png' },
+    { id: 'u20', name: 'Tim co.™', baseCost: 500000000000, add: 10000000000, icon: 'assets/upgrades/upgrade20.png' },
+    { id: 'u21', name: 'White Hole', baseCost: 1000000000000, add: 50000000000, icon: 'assets/upgrades/upgrade21.png' },
+    { id: 'u22', name: 'DEATH STARE TIM', baseCost: 5000000000000, add: 100000000000, icon: 'assets/upgrades/upgrade22.png' },
+    { id: 'u23', name: 'Blooket Tim', baseCost: 10000000000000, add: 500000000000, icon: 'assets/upgrades/upgrade23.png' },
+    { id: 'u24', name: 'Bordspel Geuzen', baseCost: 50000000000000, add: 1000000000000, icon: 'assets/upgrades/upgrade24.png' },
+    { id: 'u25', name: 'Magnus Carlsen', baseCost: 100000000000000, add: 500000000000, icon: 'assets/upgrades/upgrade25.png' },
+    { id: 'u26', name: 'Neutronenster', baseCost: 500000000000000, add: 1000000000000, icon: 'assets/upgrades/upgrade26.png' },
+    { id: 'u27', name: 'Supernova', baseCost: 1000000000000000, add: 5000000000000, icon: 'assets/upgrades/upgrade27.png' },
+    { id: 'u28', name: 'Polonium-210', baseCost: 5000000000000000, add: 10000000000000, icon: 'assets/upgrades/upgrade28.png' },
+    { id: 'u29', name: 'Dyson Shell', baseCost: 10000000000000000, add: 50000000000000, icon: 'assets/upgrades/upgrade29.png' },
+    { id: 'u30', name: 'Particle Accelerator', baseCost: 50000000000000000, add: 100000000000000, icon: 'assets/upgrades/upgrade30.png' },
+    { id: 'u31', name: 'The heat death of the timiverse', baseCost: 100000000000000000, add: 500000000000000, icon: 'assets/upgrades/upgrade31.png' },
+    { id: 'u32', name: 'Strange Quark', baseCost: 500000000000000000, add: 1000000000000000, icon: 'assets/upgrades/upgrade32.png' },
+    { id: 'u33', name: 'The Great Attractor', baseCost: 1000000000000000000, add: 5000000000000000, icon: 'assets/upgrades/upgrade33.png' },
+    { id: 'u34', name: 'The universe is a doughnut theory', baseCost: 5000000000000000000, add: 10000000000000000, icon: 'assets/upgrades/upgrade34.png' },
+    { id: 'u35', name: 'Lobotomy', baseCost: 50000000000000000000, add: 100000000000000000, icon: 'assets/upgrades/upgrade37.png' },
+    { id: 'u36', name: 'Dafthusky', baseCost: 100000000000000000000, add: 500000000000000000, icon: 'assets/upgrades/upgrade39.png' },
+    { id: 'u37', name: 'Quasar', baseCost: 500000000000000000000, add: 1000000000000000000, icon: 'assets/upgrades/upgrade35.png' },
+    { id: 'u38', name: 'Who is the inventor of cheese???', baseCost: 1000000000000000000000, add: 5000000000000000000, icon: 'assets/upgrades/upgradecheese.png' },
+    { id: 'u39', name: 'The fabric of space and Tim', baseCost: 5000000000000000000000, add: 10000000000000000000, icon: 'assets/upgrades/upgrade36.png' },
+    { id: 'u40', name: 'Deep Brain stimulation', baseCost: 10000000000000000000000, add: 50000000000000000000, icon: 'assets/upgrades/upgrade38.png' },
+    { id: 'u41', name: '6 laws of quantum physics', baseCost: 50000000000000000000000, add: 100000000000000000000, icon: 'assets/upgrades/upgrade40.png' },
+    { id: 'u42', name: 'Weapon of Mosquito Destruction', baseCost: 100000000000000000000000, add: 500000000000000000000, icon: 'assets/upgrades/upgrade41.png' },
     { id: 'u43', name: 'P-A', baseCost: 500000000000000000000000, add: 1000000000000000000000, icon: 'assets/upgrades/P-A.png' },
     { id: 'u44', name: 'G-T', baseCost: 1000000000000000000000000, add: 5000000000000000000000, icon: 'assets/upgrades/G-T.png' },
     { id: 'u45', name: 'Le Beter Click', baseCost: 1000000000000000000000, add: 0, bonusPerOwned: 0.2, icon: 'assets/upgrades/Le_Beter_Click.png' },
     { id: 'u46', name: 'golden ratio', baseCost: 2000000000000000000000, add: 0, bonusPerOwned: 0.61803398875, icon: 'assets/upgrades/Golden_Ratio.png' },
-    { id: 'u47', name: 'Clone', baseCost: 5000000000000000000000, add: 0, mult: 2, maxOwned: 1, icon: 'assets/upgrades/Clone.png' }
+    { id: 'u47', name: 'Clone', baseCost: 5000000000000000000000, add: 0, mult: 2, maxOwned: 1, icon: 'assets/upgrades/Clone.png' },
+    { id: 'u48', name: 'Quantum Tim', baseCost: 10000000000000000000000000, add: 50000000000000000000000, icon: 'assets/upgrades/upgrade40.png' },
+    { id: 'u49', name: 'Universal Consensus', baseCost: 50000000000000000000000000, add: 0, mult: 1.5, icon: 'assets/upgrades/upgrade41.png' },
+    { id: 'u50', name: 'Tim Transcendence', baseCost: 1000000000000000000000000000, add: 1000000000000000000000000, icon: 'assets/upgrades/upgrade31.png' }
   ];
   var UPGRADES = upgrades;
   var DEFAULT_SKIN_FILE = 'assets/skins/default.png';
@@ -411,6 +414,8 @@
     'assets/skins/Terminal_Tim.png',
     'assets/skins/Tim_Driving_In_Car_Right_After_A_Beer.png',
     'assets/skins/TimTim.png',
+    'assets/skins/skin_galaxy.png',
+    'assets/skins/skin_tim.png',
     'assets/skins/Tim_Missprinttttttttt.png',
     'assets/skins/Tim_Of_War.png',
     'assets/skins/TimaCola.png',
@@ -554,7 +559,8 @@
     basketball: { name: '🏀 Hoop Shot', cost: 500, reward: 1700, winChance: 0.4 },
     koopacrunch: { name: 'Koopa Crunch', cost: 1200, reward: 4200, winChance: 0.3 },
     subway: { name: 'Subway Surfers mode', cost: 1600, reward: 5600, winChance: 0.27 },
-    slotmachine: { name: 'Slot machine', cost: 1000, reward: 3500, winChance: 0.32 }
+    slotmachine: { name: 'Slot machine', cost: 1000, reward: 3500, winChance: 0.32 },
+    timroulette: { name: 'Tim Roulette', cost: 5000, reward: 25000, winChance: 0.18, jackpot: true }
   };
 
   var COINS = {
@@ -562,6 +568,20 @@
     CHATGPT: { name: 'ChatcoinGPT', vol: 8 },
     KIRB: { name: 'Kirbcoin', vol: 16 }
   };
+
+  var ACHIEVEMENTS = [
+    { id: 'first_click', name: 'First Contact', desc: 'Click Tim once.', icon: '👆', check: function(s) { return s.totalClicks >= 1; } },
+    { id: '1k_tims', name: 'Tim Novice', desc: 'Earn 1,000 lifetime Tims.', icon: '💰', check: function(s) { return s.totalTimsEarned >= 1000; } },
+    { id: '1m_tims', name: 'Tim Millionaire', desc: 'Earn 1,000,000 lifetime Tims.', icon: '🏦', check: function(s) { return s.totalTimsEarned >= 1000000; } },
+    { id: 'first_rebirth', name: 'New Beginnings', desc: 'Rebirth for the first time.', icon: '♻️', check: function(s) { return s.rebirths >= 1; } },
+    { id: 'ten_rebirths', name: 'Tim Ascendant', desc: 'Reach 10 rebirths.', icon: '✨', check: function(s) { return s.rebirths >= 10; } },
+    { id: 'skin_collector', name: 'Fashionista', desc: 'Own 5 skins.', icon: '👕', check: function(s) { return s.skinsOwned.length >= 5; } },
+    { id: 'upgrade_junkie', name: 'Overclocker', desc: 'Own 100 total upgrades.', icon: '⚙️', check: function(s) {
+      var total = 0;
+      for (var id in s.upgrades) total += s.upgrades[id];
+      return total >= 100;
+    } }
+  ];
 
   var BATTLE_PASS = {
     xpPerLevel: 100,
@@ -607,6 +627,9 @@
     coinWallet: { JOHAN: 5, CHATGPT: 0, KIRB: 0 },
     battlePassXp: 0,
     battlePassClaimed: [],
+    achievements: [],
+    totalTimsEarned: 0,
+    totalClicks: 0,
     questProgress: { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 },
     questResetKey: '',
     updatedAt: 0,
@@ -631,6 +654,9 @@
     state.tims = safeFiniteNonNegativeNumber(state.tims, 0, MAX_TIMS_VALUE);
     state.rebirths = Math.floor(safeFiniteNonNegativeNumber(state.rebirths, 0));
     if (!state.battlePassClaimed || !Array.isArray(state.battlePassClaimed)) state.battlePassClaimed = [];
+    if (!state.achievements || !Array.isArray(state.achievements)) state.achievements = [];
+    if (typeof state.totalTimsEarned !== 'number') state.totalTimsEarned = 0;
+    if (typeof state.totalClicks !== 'number') state.totalClicks = 0;
     if (typeof state.battlePassXp !== 'number') state.battlePassXp = 0;
     if (!state.questProgress || typeof state.questProgress !== 'object') {
       state.questProgress = { clicks: 0, upgradesBought: 0, minigamesPlayed: 0 };
@@ -922,6 +948,8 @@
 
   function totalMultiplier() {
     var multiplier = 1;
+    var achievementCount = state.achievements ? state.achievements.length : 0;
+    multiplier *= (1 + achievementCount * 0.01);
     for (var i = 0; i < UPGRADES.length; i++) {
       var up = UPGRADES[i];
       var owned = state.upgrades[up.id] || 0;
@@ -1048,16 +1076,35 @@
     return Object.keys(dirtyDomains).length > 0 || Object.keys(pendingCounterDeltas).length > 0;
   }
 
+  function checkAchievements() {
+    var updated = false;
+    for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+      var ach = ACHIEVEMENTS[i];
+      if (state.achievements.indexOf(ach.id) === -1 && ach.check(state)) {
+        state.achievements.push(ach.id);
+        markDirty('achievements');
+        updated = true;
+      }
+    }
+    if (updated) renderAchievements();
+  }
+
   function setTims(value) {
     state.tims = safeFiniteNonNegativeNumber(value, 0, MAX_TIMS_VALUE);
     markDirty('tims');
+    checkAchievements();
   }
 
   function addTims(delta, conflictSafe) {
     if (!delta || !Number.isFinite(delta)) return;
     state.tims = safeFiniteNonNegativeNumber(state.tims + delta, 0, MAX_TIMS_VALUE);
+    if (delta > 0) {
+      state.totalTimsEarned += delta;
+      queueCounterDelta('totalTimsEarned', delta);
+    }
     if (conflictSafe) queueCounterDelta('tims', delta);
     else markDirty('tims');
+    checkAchievements();
   }
 
   function setPresencePopupVisible(show) {
@@ -1328,6 +1375,27 @@
       .finally(function () {
         leaderboardWriteInFlight = false;
       });
+  }
+
+  function createFloatingNumber(amount, x, y) {
+    var container = el('floatingNumbersContainer');
+    if (!container) return;
+    var num = document.createElement('div');
+    num.className = 'floating-number';
+    num.textContent = '+' + shortNumber(amount);
+    
+    // Randomize position slightly within the Tim image area
+    var rect = container.getBoundingClientRect();
+    var offsetX = (Math.random() - 0.5) * 40;
+    var offsetY = (Math.random() - 0.5) * 40;
+    
+    num.style.left = (rect.width / 2 + offsetX) + 'px';
+    num.style.top = (rect.height / 2 + offsetY) + 'px';
+    
+    container.appendChild(num);
+    setTimeout(function() {
+      if (num.parentNode) num.parentNode.removeChild(num);
+    }, 800);
   }
 
   function animateTimClick() {
@@ -1666,9 +1734,19 @@
           if (state.tims < game.cost) return;
           addTims(-game.cost, false);
           var win = Math.random() < game.winChance;
-          if (win) addTims(game.reward, false);
+          var jackpot = false;
+          if (game.jackpot && Math.random() < 0.05) {
+            win = true;
+            jackpot = true;
+          }
+          if (win) {
+            var reward = jackpot ? (game.reward * 10) : game.reward;
+            addTims(reward, false);
+            el('miniResult').textContent = jackpot ? ('JACKPOT!!! +' + shortNumber(reward)) : ('WIN +' + shortNumber(reward));
+          } else {
+            el('miniResult').textContent = 'LOSE';
+          }
           addQuestProgress('minigamesPlayed', 1);
-          el('miniResult').textContent = win ? ('WIN +' + game.reward) : 'LOSE';
           saveNow(true);
           renderAll();
         };
@@ -1765,6 +1843,23 @@
     };
   }
 
+  function renderAchievements() {
+    var box = el('achievementList');
+    if (!box) return;
+    box.innerHTML = '';
+    for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+      var ach = ACHIEVEMENTS[i];
+      var owned = state.achievements.indexOf(ach.id) >= 0;
+      var item = document.createElement('div');
+      item.className = 'achievement-item' + (owned ? '' : ' locked');
+      item.innerHTML = '<div class="achievement-icon">' + (owned ? ach.icon : '❓') + '</div>' +
+        '<div class="achievement-name">' + (owned ? ach.name : '???') + '</div>' +
+        '<div class="achievement-desc">' + (owned ? ach.desc : 'Keep playing to unlock.') + '</div>';
+      box.appendChild(item);
+    }
+    el('achievementBoost').textContent = 'You have ' + state.achievements.length + ' trophies. Total boost: +' + state.achievements.length + '% CPS.';
+  }
+
   function renderAll() {
     if (resetDailyQuestsIfNeeded()) saveNow(true);
     updateStats();
@@ -1775,6 +1870,7 @@
     renderMinigames();
     renderCrypto();
     renderBattlePass();
+    renderAchievements();
     renderLeaderboard();
     syncCloneDvdEffect();
   }
@@ -1805,7 +1901,10 @@
     var beterOwned = state.upgrades.u45 || 0;
     if (beterOwned > 0) clickBonus += cps() * 0.2 * beterOwned;
     animateTimClick();
+    createFloatingNumber(clickBonus);
     addTims(clickBonus, true);
+    state.totalClicks += 1;
+    queueCounterDelta('totalClicks', 1);
     addQuestProgress('clicks', 1);
     saveNow();
     renderAll();

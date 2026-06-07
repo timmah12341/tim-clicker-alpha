@@ -46,8 +46,17 @@
       </header>
 
       <section class="card click-area">
-        <img id="timImage" src="assets/skins/default.png" alt="Tim">
+        <div id="clickAreaContainer" style="position: relative; display: inline-block;">
+          <img id="timImage" src="assets/skins/default.png" alt="Tim">
+          <div id="floatingNumbersContainer"></div>
+        </div>
         <button id="rebirthBtn">Rebirth</button>
+      </section>
+
+      <section class="card">
+        <h2>Trophies</h2>
+        <p id="achievementBoost" class="status">Each trophy gives +1% CPS boost.</p>
+        <div id="achievementList" class="grid"></div>
       </section>
 
       <section class="card">
