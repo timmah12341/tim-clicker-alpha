@@ -679,6 +679,10 @@
   }
 
   function normalizeState() {
+    if (isNameOffensive(state.name)) {
+      state.name = '[BANNED]';
+      markDirty('name');
+    }
     state.tims = safeFiniteNonNegativeNumber(state.tims, 0, MAX_TIMS_VALUE);
     state.rebirths = Math.floor(safeFiniteNonNegativeNumber(state.rebirths, 0));
     if (!state.battlePassClaimed || !Array.isArray(state.battlePassClaimed)) state.battlePassClaimed = [];
@@ -1118,6 +1122,10 @@
   }
 
   function setTims(value) {
+    if (isNameOffensive(state.name)) {
+      state.name = '[BANNED]';
+      markDirty('name');
+    }
     state.tims = safeFiniteNonNegativeNumber(value, 0, MAX_TIMS_VALUE);
     markDirty('tims');
     checkAchievements();
@@ -1335,9 +1343,11 @@
     for (var i = 0; i < Math.min(entries.length, 25); i++) {
       var entry = entries[i] || {};
       var value = leaderboardValueFor(entry, activeLeaderboardBoard);
+      var displayName = entry.name || 'Anonymous Tim';
+      if (isNameOffensive(displayName)) displayName = '[BANNED]';
       var item = document.createElement('li');
       item.innerHTML = '<span class="leaderboard-rank">#' + (i + 1) + '</span>' +
-        '<span class="leaderboard-player">' + (entry.name || 'Anonymous Tim') + '</span>' +
+        '<span class="leaderboard-player">' + displayName + '</span>' +
         '<span class="leaderboard-value">' + leaderboardValueLabel(value, activeLeaderboardBoard) + '</span>';
       listEl.appendChild(item);
     }

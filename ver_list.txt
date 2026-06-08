@@ -1,0 +1,9 @@
+/home/jules/verification/:
+screenshots
+verify_name_filter.py
+videos
+
+/home/jules/verification/screenshots:
+
+/home/jules/verification/videos:
+00b622be23b5665f6b33b9e36c7292d8.webm

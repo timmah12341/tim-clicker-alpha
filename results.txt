@@ -1,0 +1,5 @@
+Test "GoodPlayer": { valid: true }
+Test "fuck": { valid: false, error: 'Name contains offensive language.' }
+Test "Hitler123": { valid: false, error: 'Name contains offensive language.' }
+Test "a": { valid: false, error: 'Name is too short.' }
+Test empty: { valid: false, error: 'Name cannot be empty.' }
