@@ -13,6 +13,7 @@
       <h1>Tim Clicker</h1>
       <p>Enter your ingame name to start.</p>
       <input id="nameInput" placeholder="Your name">
+      <p id="initialNameStatus" class="status"></p>
       <button id="saveNameBtn">Start</button>
       <p id="firebaseStatus" class="status"></p>
     </section>
@@ -42,6 +43,7 @@
         <div id="renamePanel" class="rename-controls">
           <input id="renameInput" placeholder="New ingame name">
           <button id="renameBtn">Change name</button>
+          <p id="renameStatus" class="status" style="grid-column: 1 / -1; margin: 4px 0 0; font-size: 12px;"></p>
         </div>
       </header>
 
@@ -168,6 +170,7 @@
       <h3 id="namePopupTitle">Choose your ingame name</h3>
       <p>Pick a name before you start playing.</p>
       <input id="popupNameInput" placeholder="Your name">
+      <p id="nameStatus" class="status"></p>
       <div class="reset-actions one-col">
         <button id="savePopupNameBtn">Save name</button>
       </div>

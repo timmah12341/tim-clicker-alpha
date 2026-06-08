@@ -41,6 +41,34 @@
   var leaderboardWriteInFlight = false;
   var userGestureCaptured = false;
 
+  var BLOCKED_WORDS = [
+    'nazi', 'hitler', 'rape', 'fuck', 'shit', 'piss', 'cunt', 'slut', 'whore', 'bastard',
+    'nigga', 'nigger', 'faggot', 'retard', 'autism', 'autistic', 'pedo', 'pedophile',
+    'porn', 'sex', 'dick', 'cock', 'penis', 'vagina', 'asshole', 'cum'
+  ];
+
+  function isNameOffensive(name) {
+    if (!name) return false;
+    var lowerName = name.toLowerCase();
+    for (var i = 0; i < BLOCKED_WORDS.length; i++) {
+      if (lowerName.indexOf(BLOCKED_WORDS[i]) >= 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function validateName(name) {
+    if (!name) return { valid: false, error: 'Name cannot be empty.' };
+    var trimmed = name.trim();
+    if (trimmed.length < 2) return { valid: false, error: 'Name is too short.' };
+    if (trimmed.length > 25) return { valid: false, error: 'Name is too long (max 25 characters).' };
+    if (isNameOffensive(trimmed)) {
+      return { valid: false, error: 'Name contains offensive language.' };
+    }
+    return { valid: true };
+  }
+
   function buildSessionId() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') {
       return window.crypto.randomUUID();
@@ -2358,16 +2386,45 @@
 
     el('renameBtn').onclick = function () {
       var newName = el('renameInput').value.trim();
-      if (!newName) return;
+      var validation = validateName(newName);
+      var statusEl = el('renameStatus');
+      if (!validation.valid) {
+        if (statusEl) statusEl.textContent = validation.error;
+        return;
+      }
+      if (statusEl) statusEl.textContent = '';
       state.name = newName;
       markDirty('name');
       saveNow(true);
       renderAll();
     };
 
+    el('saveNameBtn').onclick = function () {
+      var name = el('nameInput').value.trim();
+      var validation = validateName(name);
+      var statusEl = el('initialNameStatus');
+      if (!validation.valid) {
+        if (statusEl) statusEl.textContent = validation.error;
+        return;
+      }
+      if (statusEl) statusEl.textContent = '';
+      state.name = name;
+      markDirty('name');
+      el('namePanel').classList.add('hidden');
+      el('gamePanel').classList.remove('hidden');
+      saveNow(true);
+      renderAll();
+    };
+
     el('savePopupNameBtn').onclick = function () {
       var name = el('popupNameInput').value.trim();
-      if (!name) return;
+      var validation = validateName(name);
+      var statusEl = el('nameStatus');
+      if (!validation.valid) {
+        if (statusEl) statusEl.textContent = validation.error;
+        return;
+      }
+      if (statusEl) statusEl.textContent = '';
       state.name = name;
       markDirty('name');
       el('renameInput').value = name;
